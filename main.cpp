@@ -9,6 +9,9 @@
 
 namespace fs = boost::filesystem;
 
+constexpr static uint16_t MAX_INTENSITY = std::numeric_limits<uint16_t>::max();
+constexpr static uint16_t MIN_INTENSITY = 0;
+
 struct Box {
     Box() : xmin(0), xmax(0), ymin(0), ymax(0){};
     Box(int x_min, int x_max, int y_min, int y_max)
@@ -60,7 +63,7 @@ double MichelsonContrast(
     double ink_avg = 0.0;
 
     for (auto i : inkpts) {
-        ink_avg += image.at<float>(i[1], i[0]);
+        ink_avg += static_cast<double>(image.at<uint16_t>(i[1], i[0]));
     }
 
     ink_avg /= inkpts.size();
@@ -68,7 +71,7 @@ double MichelsonContrast(
     double papy_avg = 0.0;
 
     for (auto i : papypts) {
-        papy_avg += image.at<float>(i[1], i[0]);
+        papy_avg += static_cast<double>(image.at<uint16_t>(i[1], i[0]));
     }
 
     papy_avg /= papypts.size();
@@ -137,6 +140,7 @@ void WriteCSV(fs::path path, std::map<std::string, std::vector<double>> res)
         // Write the header
         ofs << "wavelength,"
             << "michel,"
+            << "rms0,"
             << "rms1,"
             << "rms2,"
             << "rms3" << std::endl;
@@ -233,12 +237,14 @@ int main(int argc, char** argv) {
     std::map<std::string, std::vector<double>> wavelength_results;
     std::vector<double> contrasts;
     cv::Mat image;
+    std::cout << "Calculating contrast metrics..." << std::endl;
     for (auto path : imgpaths) {
         // Reset temp storage
         contrasts.clear();
 
         // Get wavelength for key
         auto id = ParseWavelength(path);
+        std::cout << "Wavelength: " << id << "\r" << std::flush;
 
         // Load the image
         image = cv::imread(path.string(), -1);
@@ -249,7 +255,11 @@ int main(int argc, char** argv) {
         }
 
         // Normalize the image
-        // To-Do
+        double min, max;
+        cv::minMaxLoc(image, &min, &max);
+        image.convertTo(
+            image, CV_16U, MAX_INTENSITY / (max - min),
+            -min * MAX_INTENSITY / (max - min));
 
         // Michelson Contrast
         contrasts.push_back(MichelsonContrast(image, inkpts, papypts));
@@ -262,9 +272,12 @@ int main(int argc, char** argv) {
         // Add to the map
         wavelength_results[id] = contrasts;
     }
+    std::cout << std::endl;
 
     ///// Write to a CSV /////
+    std::cout << "Writing CSV..." << std::endl;
     WriteCSV(csv_path, wavelength_results);
 
+    std::cout << "Done." << std::endl;
     return 0;
 }
