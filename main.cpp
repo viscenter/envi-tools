@@ -6,9 +6,6 @@
 
 #include <boost/filesystem.hpp>
 
-using namespace cv;
-using namespace std;
-
 namespace fs = boost::filesystem;
 
 // returns random int on interval [a,b]
@@ -25,7 +22,8 @@ struct box {
 
 // return the filenames of all files that have the specified extension
 // in the specified directory and all subdirectories
-void get_all(const fs::path& root, const string& ext, vector<fs::path>& ret)
+void get_all(
+    const fs::path& root, const std::string& ext, std::vector<fs::path>& ret)
 {
     if(!fs::exists(root) || !fs::is_directory(root)) return;
 
@@ -67,8 +65,7 @@ double michelson_contrast(cv::Mat image, std::vector<cv::Vec2i> inkpts, std::vec
 
         papy_avg /= papypts.size();
 
-        double contrast = abs((ink_avg - papy_avg)/(ink_avg + papy_avg));
-
+        double contrast = std::abs((ink_avg - papy_avg) / (ink_avg + papy_avg));
 
         //cout << return_wavelength(paths) << "       " << contrast<< endl;
         //cout << return_wavelength(paths) << endl;
@@ -104,7 +101,8 @@ double rms_contrast(cv::Mat image,box region) {
         {
                 for (int x = region.xmin; x < region.xmax; x++)
                 {
-                        contrast += pow((subImg.at<float>(y,x) - avgIntensity),2);
+                    contrast +=
+                        std::pow((subImg.at<float>(y, x) - avgIntensity), 2);
                 }
         }
 
@@ -114,16 +112,16 @@ double rms_contrast(cv::Mat image,box region) {
 }
 
 // given path to image (wavelength).tif, return wavelength
-string return_wavelength(fs::path imagePath) {
-        auto name = imagePath.stem().string();
+std::string return_wavelength(fs::path imagePath)
+{
+    auto name = imagePath.stem().string();
 
-        int pos3 = name.find("-");
-        if (pos3 !=string::npos)
-        {
-                name.replace(pos3,1,".");
-        }
+    auto pos3 = name.find("-");
+    if (pos3 != std::string::npos) {
+        name.replace(pos3, 1, ".");
+    }
 
-        return name;
+    return name;
 }
 
 // argv[1] == directory of wavelengths to be passed
@@ -223,21 +221,30 @@ int main(int argc, char** argv) {
 
         cv::Mat image;
 
-        ofstream dataOutput;
+        std::ofstream dataOutput;
         dataOutput.open("results.csv");
 
-        dataOutput << "Wavelength," << "Region0," << "Region1," << "Region2," << "Region3" << endl << endl;
-        cout << "Wavelength," << "Region0," << "Region1," << "Region2," << "Region3" << endl << endl;
+        dataOutput << "Wavelength,"
+                   << "Region0,"
+                   << "Region1,"
+                   << "Region2,"
+                   << "Region3" << std::endl
+                   << std::endl;
+        std::cout << "Wavelength,"
+                  << "Region0,"
+                  << "Region1,"
+                  << "Region2,"
+                  << "Region3" << std::endl
+                  << std::endl;
 
         for (auto paths : imgpaths)
         {
 
-                image = imread(paths.string(),-1);
-                if (!image.data)
-                {
-                        cout << "Could not open or find the image" << endl;
-                        cout << paths.string() << endl;
-                        return -1;
+            image = cv::imread(paths.string(), -1);
+            if (!image.data) {
+                std::cout << "Could not open or find the image" << std::endl;
+                std::cout << paths.string() << std::endl;
+                return -1;
                 }
 
                 double contrast0 = rms_contrast(image,inkPapy0);
@@ -247,10 +254,13 @@ int main(int argc, char** argv) {
 
 
                 //cout << return_wavelength(paths) << endl;
-                dataOutput << return_wavelength(paths) << "," << contrast0 << "," << contrast1 << "," << contrast2 << "," << contrast3 << endl;
+                dataOutput << return_wavelength(paths) << "," << contrast0
+                           << "," << contrast1 << "," << contrast2 << ","
+                           << contrast3 << std::endl;
 
-                cout << return_wavelength(paths) << "," << contrast0 << "," << contrast1 << "," << contrast2 << "," << contrast3 << endl;
-
+                std::cout << return_wavelength(paths) << "," << contrast0 << ","
+                          << contrast1 << "," << contrast2 << "," << contrast3
+                          << std::endl;
         }
 
         dataOutput.close();
