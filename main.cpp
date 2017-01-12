@@ -4,13 +4,13 @@
 #include <opencv2/core.hpp>
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc.hpp>
+#include <opencv2/photo.hpp>
 
 #include <boost/filesystem.hpp>
 
 namespace fs = boost::filesystem;
 
 constexpr static uint16_t MAX_INTENSITY = std::numeric_limits<uint16_t>::max();
-constexpr static uint16_t MIN_INTENSITY = 0;
 
 struct Box {
     Box() : xmin(0), xmax(0), ymin(0), ymax(0){};
@@ -56,29 +56,24 @@ std::vector<fs::path> FindByExtension(
 
 // returns contrast from set of points using michelson metric (Gene Ware)
 double MichelsonContrast(
-    cv::Mat image,
-    std::vector<cv::Vec2i> inkpts,
-    std::vector<cv::Vec2i> papypts)
+    cv::Mat image, std::vector<cv::Vec2i> fg_pts, std::vector<cv::Vec2i> bg_pts)
 {
-    double ink_avg = 0.0;
-
-    for (auto i : inkpts) {
-        ink_avg += static_cast<double>(image.at<uint16_t>(i[1], i[0]));
+    // Foreground average
+    double fg_avg = 0.0;
+    for (auto i : fg_pts) {
+        fg_avg += image.at<float>(i[1], i[0]);
     }
+    fg_avg /= fg_pts.size();
 
-    ink_avg /= inkpts.size();
-
-    double papy_avg = 0.0;
-
-    for (auto i : papypts) {
-        papy_avg += static_cast<double>(image.at<uint16_t>(i[1], i[0]));
+    // Background average
+    double bg_avg = 0.0;
+    for (auto i : bg_pts) {
+        bg_avg += image.at<float>(i[1], i[0]);
     }
+    bg_avg /= bg_pts.size();
 
-    papy_avg /= papypts.size();
-
-    double contrast = std::abs((ink_avg - papy_avg) / (ink_avg + papy_avg));
-
-    return contrast;
+    // Contrast
+    return std::abs((fg_avg - bg_avg) / (fg_avg + bg_avg));
 }
 
 // returns contrast of a subregion using root mean square metric
@@ -128,6 +123,17 @@ std::string ParseWavelength(fs::path imagePath)
     }
 
     return name;
+}
+
+cv::Mat ToneMap(cv::Mat m, float gamma = 1.0f)
+{
+    auto tmp = m.clone();
+    cv::cvtColor(tmp, tmp, CV_GRAY2BGR);
+    auto tonemap = cv::createTonemap(gamma);
+    tonemap->process(tmp, tmp);
+    tmp *= MAX_INTENSITY;
+    cv::cvtColor(tmp, tmp, CV_BGR2GRAY);
+    return tmp;
 }
 
 void WriteCSV(fs::path path, std::map<std::string, std::vector<double>> res)
@@ -254,12 +260,7 @@ int main(int argc, char** argv) {
             continue;
         }
 
-        // Normalize the image
-        double min, max;
-        cv::minMaxLoc(image, &min, &max);
-        image.convertTo(
-            image, CV_16U, MAX_INTENSITY / (max - min),
-            -min * MAX_INTENSITY / (max - min));
+        image = ToneMap(image, 2.2);
 
         // Michelson Contrast
         contrasts.push_back(MichelsonContrast(image, inkpts, papypts));

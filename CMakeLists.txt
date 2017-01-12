@@ -15,4 +15,5 @@ target_link_libraries(et_contrast
         opencv_core
         opencv_highgui
         opencv_imgproc
-        )
+        opencv_photo
+)
