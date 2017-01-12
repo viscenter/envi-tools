@@ -59,16 +59,16 @@ double MichelsonContrast(
 {
     // Foreground average
     double fg_avg = 0.0;
-    auto s = fg_pts.size();
+    double s = 1.0 / fg_pts.size();
     for (auto i : fg_pts) {
-        fg_avg += image.at<float>(i[1], i[0]) / s;
+        fg_avg += image.at<float>(i[1], i[0]) * s;
     }
 
     // Background average
     double bg_avg = 0.0;
-    s = bg_pts.size();
+    s = 1.0 / bg_pts.size();
     for (auto i : bg_pts) {
-        bg_avg += image.at<float>(i[1], i[0]) / s;
+        bg_avg += image.at<float>(i[1], i[0]) * s;
     }
 
     // Contrast
