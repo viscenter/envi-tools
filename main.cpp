@@ -14,7 +14,7 @@ constexpr static uint16_t MAX_INTENSITY = std::numeric_limits<uint16_t>::max();
 
 struct Box {
     Box() : xmin(0), xmax(0), ymin(0), ymax(0){};
-    Box(int x_min, int x_max, int y_min, int y_max)
+    Box(int x_min, int y_min, int x_max, int y_max)
         : xmin(x_min), xmax(x_max), ymin(y_min), ymax(y_max){};
     int xmin, xmax, ymin, ymax;
 };
@@ -22,10 +22,9 @@ struct Box {
 // returns random int on interval [a,b]
 int RandomInt(int a, int b)
 {
-    std::srand(std::time(0));
-    int c = b - a;
-    int num = rand() % c + a;
-    return num;
+    std::random_device genDevice;
+    std::uniform_int_distribution<int> genDist(a, b);
+    return genDist(genDevice);
 }
 
 // return the filenames of all files that have the specified extension
@@ -80,36 +79,12 @@ double MichelsonContrast(
 double RMSContrast(cv::Mat image, Box region)
 {
     cv::Mat subImg = image(
-                         cv::Range(region.ymin, region.ymax),
-                         cv::Range(region.xmin, region.xmax))
-                         .clone();
+        cv::Range(region.ymin, region.ymax),
+        cv::Range(region.xmin, region.xmax));
+    cv::Scalar m, s;
+    cv::meanStdDev(subImg, m, s);
 
-    // normalize(subImg,subImg);
-    double min, max;
-
-    cv::minMaxLoc(subImg, &min, &max);
-
-    subImg = (subImg - min) / (max - min);
-
-    // compute average intensity
-    double avgIntensity = 0.0;
-    double imageSize =
-        (region.ymax - region.ymin) * (region.xmax - region.xmin);
-
-    cv::Scalar matMean = cv::mean(subImg);
-    avgIntensity = matMean.val[0];
-
-    // compute contrast
-    double contrast = 0.0;
-    for (int y = region.ymin; y < region.ymax; y++) {
-        for (int x = region.xmin; x < region.xmax; x++) {
-            contrast += std::pow((subImg.at<float>(y, x) - avgIntensity), 2);
-        }
-    }
-
-    contrast = sqrt((1 / imageSize) * contrast);
-
-    return contrast;
+    return s[0];
 }
 
 // given path to image (wavelength).tif, return wavelength
@@ -131,7 +106,6 @@ cv::Mat ToneMap(cv::Mat m, float gamma = 1.0f)
     cv::cvtColor(tmp, tmp, CV_GRAY2BGR);
     auto tonemap = cv::createTonemap(gamma);
     tonemap->process(tmp, tmp);
-    tmp *= MAX_INTENSITY;
     cv::cvtColor(tmp, tmp, CV_BGR2GRAY);
     return tmp;
 }
@@ -190,24 +164,25 @@ int main(int argc, char** argv) {
     std::vector<cv::Vec2i> inkpts, papypts;
 
     // Ink points (for Michelson)
-    inkpts.push_back(cv::Vec2i(1703,658));
-    inkpts.push_back(cv::Vec2i(1635,667));
-    inkpts.push_back(cv::Vec2i(1706,584));
-    inkpts.push_back(cv::Vec2i(1657,747));
-    inkpts.push_back(cv::Vec2i(1545,539));
-
-    inkpts.push_back(cv::Vec2i(1046,1177));
-    inkpts.push_back(cv::Vec2i(1002,1183));
-    inkpts.push_back(cv::Vec2i(1536,502));
-    inkpts.push_back(cv::Vec2i(1498,497));
-    inkpts.push_back(cv::Vec2i(1680,671));
+    inkpts.push_back({847, 1300});
+    inkpts.push_back({821, 1520});
+    inkpts.push_back({777, 1530});
+    inkpts.push_back({456, 1502});
+    inkpts.push_back({355, 1041});
+    inkpts.push_back({317, 896});
+    inkpts.push_back({328, 494});
+    inkpts.push_back({343, 406});
+    inkpts.push_back({577, 1722});
+    inkpts.push_back({627, 1712});
+    inkpts.push_back({769, 1682});
 
     // Regions of papyrus with randomly generated points (for Michelson)
     std::vector<Box> PapyrusBoxes;
-    PapyrusBoxes.push_back({516, 528, 1561, 1402});
-    PapyrusBoxes.push_back({723, 737, 1768, 1624});
-    PapyrusBoxes.push_back({559, 574, 1713, 1567});
-    PapyrusBoxes.push_back({773, 781, 1715, 1638});
+    PapyrusBoxes.push_back({464, 1512, 487, 1540});
+    PapyrusBoxes.push_back({552, 1512, 576, 1569});
+    PapyrusBoxes.push_back({694, 496, 715, 558});
+    PapyrusBoxes.push_back({339, 539, 362, 574});
+    PapyrusBoxes.push_back({852, 1285, 874, 1321});
 
     for (int i = 0; i < 500; i++) {
         auto box_id = RandomInt(0, static_cast<int>(PapyrusBoxes.size() - 1));
@@ -218,26 +193,12 @@ int main(int argc, char** argv) {
         papypts.push_back({x, y});
     }
 
-    /* Random points of papyrus
-    papypts.push_back(cv::Vec2i(1704,693));
-    papypts.push_back(cv::Vec2i(1764,725));
-    papypts.push_back(cv::Vec2i(1685,560));
-    papypts.push_back(cv::Vec2i(1718,460));
-    papypts.push_back(cv::Vec2i(1505,522));
-
-    papypts.push_back(cv::Vec2i(1030,1059));
-    papypts.push_back(cv::Vec2i(1187,990));
-    papypts.push_back(cv::Vec2i(1528,459));
-    papypts.push_back(cv::Vec2i(1044,1194));
-    papypts.push_back(cv::Vec2i(1472,470));
-    */
-
     // Regions of ink and papyrus (for RMS)
     std::vector<Box> InkPapyrusBoxes;
-    InkPapyrusBoxes.push_back({473, 532, 1429, 1559});
-    InkPapyrusBoxes.push_back({730, 780, 1640, 1770});
-    InkPapyrusBoxes.push_back({516, 605, 1649, 1699});
-    InkPapyrusBoxes.push_back({642, 718, 1672, 1721});
+    InkPapyrusBoxes.push_back({763, 1515, 828, 1549});
+    InkPapyrusBoxes.push_back({670, 1483, 732, 1563});
+    InkPapyrusBoxes.push_back({833, 1293, 852, 1328});
+    InkPapyrusBoxes.push_back({872, 1284, 894, 1318});
 
     ///// Calculate contrast /////
     std::map<std::string, std::vector<double>> wavelength_results;
