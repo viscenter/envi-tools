@@ -14,6 +14,7 @@ target_link_libraries(et_contrast
     Boost::filesystem
     opencv_core
     opencv_highgui
+    opencv_imgcodecs
     opencv_imgproc
     opencv_photo
 )
