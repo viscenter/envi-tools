@@ -26,3 +26,5 @@ target_link_libraries(et_convert
     opencv_imgcodecs
     opencv_photo
 )
+
+add_executable(et_PointGenerator randomPointGenerator.cpp)
