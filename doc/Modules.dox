@@ -1,6 +1,6 @@
 /**
- @defgroup module1 Module 1 Library
- @brief A library of functionality, known as Module 1.
+ @defgroup envitools ENVI Tools Main Library
+ @brief The main library for ENVI tools functionality.
 */
 
 /**

@@ -1,3 +1,4 @@
-Project Contributors
------------------------
-* [Names Go Here]
+Primary Project Contributors
+----------------------------
+* Andy Conway
+* Seth Parker

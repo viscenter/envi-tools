@@ -1,9 +1,9 @@
-project(libproj_module1 VERSION 0.1 LANGUAGES CXX)
-set(module "module1")
-set(target "proj_${module}")
+project(libenvitools VERSION 0.1 LANGUAGES CXX)
+set(module "envitools")
+set(target "${module}")
 
 set(srcs
-    src/ExampleClass.cpp
+        src/ENVI.cpp
 )
 
 add_library(${target} ${srcs})
@@ -15,7 +15,8 @@ target_include_directories(${target}
 )
 target_link_libraries(${target}
     PUBLIC
-#        opencv_core
+        Boost::filesystem
+        opencv_core
 )
 set_target_properties(${target} PROPERTIES
     VERSION "${PROJECT_VERSION}"

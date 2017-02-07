@@ -17,3 +17,10 @@ target_link_libraries(et_convert
         )
 
 add_executable(et_PointGenerator src/randomPointGenerator.cpp)
+
+add_executable(et_ReadENVI src/ReadENVI.cpp)
+target_link_libraries(et_ReadENVI
+        ET::envitools
+        opencv_core
+        opencv_imgcodecs
+        )
