@@ -1,0 +1,9 @@
+/**
+ @defgroup module1 Module 1 Library
+ @brief A library of functionality, known as Module 1.
+*/
+
+/**
+ @defgroup ExampleDocs Documentation Examples
+ @brief Files that demonstrate how code should be formatted for Doxygen.
+*/

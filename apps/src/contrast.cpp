@@ -40,9 +40,7 @@ std::vector<fs::path> FindByExtension(
     fs::recursive_directory_iterator it(root);
     fs::recursive_directory_iterator endit;
 
-
-    while(it != endit)
-    {
+    while (it != endit) {
         if (fs::is_regular_file(*it) && it->path().extension() == ext) {
             fs::path path = canonical(it->path());
             ret.push_back(path);
@@ -146,7 +144,8 @@ void WriteCSV(fs::path path, std::map<std::string, std::vector<double>> res)
 }
 
 // argv[1] == directory of wavelengths to be passed
-int main(int argc, char** argv) {
+int main(int argc, char** argv)
+{
     if (argc < 3) {
         std::cout << " Usage: " << argv[0];
         std::cout << " tif_directory/ output.csv" << std::endl;

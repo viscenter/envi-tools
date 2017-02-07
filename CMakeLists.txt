@@ -1,30 +1,53 @@
-cmake_minimum_required(VERSION 3.6)
+# ENVI Tools
+# Written by: Andy Conway, Seth Parker, and the VC Project Team
+
+cmake_minimum_required(VERSION 3.5 FATAL_ERROR)
+
+project("envi-tools" VERSION 0.1.0)
+
+set(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR}/bin)
+set(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR}/lib)
+set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
 # Use modern C++ for everything and generate compile_commands database.
 set(CMAKE_CXX_STANDARD 14)
 set(CXX_STANDARD_REQUIRED on)
+set(CMAKE_EXPORT_COMPILE_COMMANDS on)
 
-project(envi-tools)
+# Choose what to build
+option(BUILD_APPS     "Compile core programs"    on)
+option(BUILD_DOC      "Compile documentation"    on)
 
-find_package(Boost REQUIRED COMPONENTS filesystem)
-find_package(OpenCV REQUIRED)
+# Choose what to install
+option(INSTALL_APPS      "Install core programs"    on)
+option(INSTALL_DOC       "Install documentation"    on)
 
-add_executable(et_contrast contrast.cpp)
-target_link_libraries(et_contrast
-    Boost::filesystem
-    opencv_core
-    opencv_highgui
-    opencv_imgcodecs
-    opencv_imgproc
-    opencv_photo
-)
+# Look for external dependencies.
+include(FindDependencies)
 
-add_executable(et_convert convert.cpp)
-target_link_libraries(et_convert
-    Boost::filesystem
-    opencv_core
-    opencv_imgcodecs
-    opencv_photo
-)
+# Some helpful constants to be used in subprojects.
+include(Constants)
 
-add_executable(et_PointGenerator randomPointGenerator.cpp)
+# XXX Hack to get ninja output colorized for all source files.
+if (CMAKE_GENERATOR MATCHES "Ninja")
+    add_compile_options(-fdiagnostics-color=always)
+endif()
+
+# Enable warnings
+include(Warnings)
+
+## Libraries ##
+add_subdirectory(envi-tools)
+
+## Core Apps ##
+if (BUILD_APPS)
+    add_subdirectory(apps)
+endif()
+
+## Documentation
+if (BUILD_DOC)
+    add_subdirectory(doc)
+endif()
+
+# Install to system directories
+include(Install)
