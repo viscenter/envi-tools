@@ -7,6 +7,7 @@
 namespace fs = boost::filesystem;
 using namespace envitools;
 
+// Read an ENVI header file
 void ENVI::parse_header_(const fs::path& header)
 {
     // Open file
@@ -99,22 +100,21 @@ void ENVI::parse_header_(const fs::path& header)
     ifs.close();
 }
 
+// Find the image data file relative to the header location
 void ENVI::find_data_file_(const boost::filesystem::path& header)
 {
+    // File should have same name and no extension
     fs::path tmp = header;
-
-    std::vector<std::string> exts{"", "bin", "dat"};
-    for (auto e : exts) {
-        tmp.replace_extension(e);
-        if (fs::exists(tmp)) {
-            dataPath_ = tmp;
-            return;
-        }
+    tmp.replace_extension("");
+    if (fs::exists(tmp)) {
+        dataPath_ = tmp;
+        return;
     }
 
     throw std::runtime_error("Data file not found. Please specify manually");
 }
 
+// Get a specific band from the ENVI file
 cv::Mat ENVI::getBand(int b)
 {
     switch (type_) {
@@ -143,6 +143,7 @@ cv::Mat ENVI::getBand(int b)
     }
 }
 
+// Calculate byte position of pixel inside of data file based on interleave
 uint64_t ENVI::pos_of_elem_(
     uint64_t band, uint64_t y, uint64_t x, uint64_t size)
 {
@@ -150,12 +151,13 @@ uint64_t ENVI::pos_of_elem_(
         case Interleave::BandSequential:
             return size * ((samples_ * lines_ * band) + (samples_ * y) + x);
         case Interleave::BandByPixel:
-            return size * ((bands_ * lines_ * x) + (bands_ * y) + band);
+            return size * ((bands_ * samples_ * y) + (bands_ * x) + band);
         case Interleave::BandByLine:
             return size * ((samples_ * bands_ * y) + (samples_ * band) + x);
     }
 }
 
+// Print the parsed values of the header
 void ENVI::printHeader()
 {
     std::cerr << "DataType: " << static_cast<int>(type_) << std::endl;

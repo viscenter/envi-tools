@@ -46,7 +46,36 @@ public:
     /** @brief Endianness options */
     enum class Endianness { Little = 0, Big };
 
-    /** @brief Band ordering options */
+    /**
+     * @brief Band interleave options
+     *
+     * Band interleave describes the ordering of pixel information inside of
+     * the image data file. This option, along with the ENVI::DataType,
+     * determines the exact byte position of any arbitrary pixel.
+     *
+     * More information at:
+     * <a href="https://www.harrisgeospatial.com/docs/enviimagefiles.html">ENVI
+     * Image Files</a>
+     *
+     * <b>Band Sequential</b>:
+     * The most direct interleave option. Every band image is written
+     * sequentially into the data file.
+     *
+     * <b>Band-interleaved-by-pixel</b>:
+     * The first pixel of each band is written in order, followed by the
+     * second pixel of each band, and so on.
+     *
+     * <b>Band-interleaved-by-line</b>:
+     * The first line of each band is written in order, followed by the
+     * second line of each band, and so on.
+     *
+     * @image html ENVI-BSQ.png height=500px
+     * @image html ENVI-BIP.png height=500px
+     * @image html ENVI-BIL.png height=500px
+     * @image latex ENVI-BSQ.eps height=2in
+     * @image latex ENVI-BIP.eps height=2in
+     * @image latex ENVI-BIL.eps height=2in
+     * */
     enum class Interleave { BandSequential, BandByPixel, BandByLine };
 
     /** @name Constructors */

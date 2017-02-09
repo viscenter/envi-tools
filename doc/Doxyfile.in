@@ -152,7 +152,8 @@ EXCLUDE_SYMBOLS        =
 EXAMPLE_PATH           =
 EXAMPLE_PATTERNS       = *
 EXAMPLE_RECURSIVE      = NO
-IMAGE_PATH             =
+IMAGE_PATH             = @CMAKE_SOURCE_DIR@/graphics/png \
+                         @CMAKE_SOURCE_DIR@/graphics/eps
 INPUT_FILTER           =
 FILTER_PATTERNS        =
 FILTER_SOURCE_FILES    = NO
