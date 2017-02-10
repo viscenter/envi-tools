@@ -10,12 +10,19 @@ int RandomInt(int a, int b)
     return genDist(genDevice);
 }
 
-int main() {
-	int ymin, ymax, xmin, xmax, num_points = 500;
-	xmin = 464;
-	ymin = 1512;
-	xmax = 487;
-	ymax = 1540;
+// argv == et_PointGenerator ymin ymax xmin xmax
+int main(int argc, char** argv) {
+	if (argc < 5) {
+		std::cout << " Usage: " << argv[0];
+		std::cout << " ymin ymax xmin xmax" << std::endl;
+		return EXIT_FAILURE;
+	}
+	
+	int num_points = 500;
+	int xmin = [3];
+	int ymin = [1];
+	int xmax = [4];
+	int ymax = argv[2];
 
 	std::ofstream myfile;
 	myfile.open("papyrus_points.txt");
