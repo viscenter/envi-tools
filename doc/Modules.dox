@@ -1,0 +1,9 @@
+/**
+ @defgroup envitools ENVI Tools Main Library
+ @brief The main library for ENVI tools functionality.
+*/
+
+/**
+ @defgroup ExampleDocs Documentation Examples
+ @brief Files that demonstrate how code should be formatted for Doxygen.
+*/
