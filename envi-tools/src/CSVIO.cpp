@@ -1,9 +1,11 @@
 #include "envi-tools/CSVIO.hpp"
 #include <fstream>
 #include <iostream>
+#include <vector>
+#include <boost/filesystem.hpp>
 #include <opencv2/core.hpp>
 
-std::vector<cv::Vec2i> csv::read(string filename)
+static std::vector<cv::Vec2i> ReadCSV(boost::filesystem::path path)
 {
     std::ifstream myfile;
     myfile.open(filename);
@@ -16,7 +18,8 @@ std::vector<cv::Vec2i> csv::read(string filename)
     // return std::vector
 }
 
-void csv::write(std::vector<cv::Vec2i> points, string filename)
+static void WriteCSV(
+    const std::vector<cv::Vec2i>& points, boost::filesystem::path path)
 {
     std::ofstream myfile;
     myfile.open(filename);
