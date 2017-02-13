@@ -6,7 +6,7 @@
 #include <opencv2/core.hpp>
 #include <opencv2/imgcodecs.hpp>
 
-#include "envi-tools/ENVI.hpp"
+#include "envitools/ENVI.hpp"
 
 namespace et = envitools;
 namespace fs = boost::filesystem;

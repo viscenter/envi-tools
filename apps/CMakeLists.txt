@@ -17,6 +17,10 @@ target_link_libraries(et_convert
         )
 
 add_executable(et_PointGenerator src/randomPointGenerator.cpp)
+target_link_libraries(et_PointGenerator
+    ET::envitools
+    Boost::filesystem
+)
 
 add_executable(et_ReadENVI src/ReadENVI.cpp)
 target_link_libraries(et_ReadENVI
