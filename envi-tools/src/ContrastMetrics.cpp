@@ -25,8 +25,7 @@ double ContrastMetrics::MichelsonContrast(
     return std::abs((fg_avg - bg_avg) / (fg_avg + bg_avg));
 }
 
-double ContrastMetrics::RMSContrast(
-    const cv::Mat& image, const ContrastMetrics::Box& region)
+double ContrastMetrics::RMSContrast(const cv::Mat& image, const Box& region)
 {
     cv::Mat subImg = image(
         cv::Range(region.ymin, region.ymax),

@@ -1,5 +1,6 @@
 add_executable(et_contrast src/contrast.cpp)
 target_link_libraries(et_contrast
+	ET::envitools
         Boost::filesystem
         opencv_core
         opencv_highgui
