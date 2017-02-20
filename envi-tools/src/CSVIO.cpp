@@ -43,3 +43,39 @@ void CSVIO::WriteCSV(const std::vector<cv::Vec2i>& points, fs::path path)
     }
     myfile.close();
 }
+
+void CSVIO::WriteCSV(
+    fs::path path, std::map<std::string, std::vector<double>> res)
+{
+    std::ofstream ofs;
+    ofs.exceptions(std::ifstream::failbit | std::ifstream::badbit);
+    try {
+        ofs.open(path.string());
+
+        // Write the header
+        ofs << "wavelength,"
+            << "michel,"
+            << "rms0,"
+            << "rms1,"
+            << "rms2,"
+            << "rms3" << std::endl;
+
+        // Write the data
+        for (auto k : res) {
+            // Wavelength
+            ofs << k.first;
+
+            // Contrast
+            for (auto c : k.second) {
+                ofs << "," << c;
+            }
+            ofs << std::endl;
+        }
+
+        // Close the file
+        ofs.close();
+    } catch (std::ifstream::failure e) {
+        std::cerr << e.what() << std::endl;
+        return;
+    }
+}

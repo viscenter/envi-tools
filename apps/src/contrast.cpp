@@ -9,6 +9,7 @@
 #include <boost/filesystem.hpp>
 
 #include "envitools/Box.hpp"
+#include "envitools/CSVIO.hpp"
 #include "envitools/ContrastMetrics.hpp"
 
 namespace fs = boost::filesystem;
@@ -68,41 +69,6 @@ cv::Mat ToneMap(cv::Mat m, float gamma = 1.0f)
     tonemap->process(tmp, tmp);
     cv::cvtColor(tmp, tmp, CV_BGR2GRAY);
     return tmp;
-}
-
-void WriteCSV(fs::path path, std::map<std::string, std::vector<double>> res)
-{
-    std::ofstream ofs;
-    ofs.exceptions(std::ifstream::failbit | std::ifstream::badbit);
-    try {
-        ofs.open(path.string());
-
-        // Write the header
-        ofs << "wavelength,"
-            << "michel,"
-            << "rms0,"
-            << "rms1,"
-            << "rms2,"
-            << "rms3" << std::endl;
-
-        // Write the data
-        for (auto k : res) {
-            // Wavelength
-            ofs << k.first;
-
-            // Contrast
-            for (auto c : k.second) {
-                ofs << "," << c;
-            }
-            ofs << std::endl;
-        }
-
-        // Close the file
-        ofs.close();
-    } catch (std::ifstream::failure e) {
-        std::cerr << e.what() << std::endl;
-        return;
-    }
 }
 
 // argv[1] == directory of wavelengths to be passed
@@ -201,7 +167,7 @@ int main(int argc, char** argv)
 
     ///// Write to a CSV /////
     std::cout << "Writing CSV..." << std::endl;
-    WriteCSV(csv_path, wavelength_results);
+    envitools::CSVIO::WriteCSV(csv_path, wavelength_results);
 
     std::cout << "Done." << std::endl;
     return 0;
