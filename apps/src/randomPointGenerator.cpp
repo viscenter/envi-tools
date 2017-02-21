@@ -2,10 +2,9 @@
 #include <iostream>
 #include <random>
 #include <boost/filesystem.hpp>
-#include "envitools/CSVIO.hpp"
 
-// returns random int on interval [a,b]
-int RandomInt(int a, int b);
+#include "envitools/CSVIO.hpp"
+#include "envitools/EnviUtils.hpp"
 
 // argv == et_PointGenerator xmin, ymin, xmax, ymax, output path
 int main(int argc, char** argv) {
@@ -24,8 +23,8 @@ int main(int argc, char** argv) {
     std::cout << "X,Y" << std::endl;
     std::vector<cv::Vec2i> vec;
     for (int i = 0; i < num_points; i++) {
-        int x = RandomInt(xmin, xmax);
-        int y = RandomInt(ymin, ymax);
+        int x = envitools::RandomInt(xmin, xmax);
+        int y = envitools::RandomInt(ymin, ymax);
         vec.emplace_back(x, y);
         std::cout << x << "," << y << std::endl;
     }
@@ -37,11 +36,4 @@ int main(int argc, char** argv) {
     }
 
     return 0;
-}
-
-int RandomInt(int a, int b)
-{
-    std::random_device genDevice;
-    std::uniform_int_distribution<int> genDist(a, b);
-    return genDist(genDevice);
 }

@@ -1,75 +1,14 @@
 #include <iostream>
-#include <map>
-#include <random>
 #include <opencv2/core.hpp>
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc.hpp>
-#include <opencv2/photo.hpp>
-
-#include <boost/filesystem.hpp>
 
 #include "envitools/Box.hpp"
 #include "envitools/CSVIO.hpp"
 #include "envitools/ContrastMetrics.hpp"
-
-namespace fs = boost::filesystem;
+#include "envitools/EnviUtils.hpp"
 
 constexpr static uint16_t MAX_INTENSITY = std::numeric_limits<uint16_t>::max();
-
-int RandomInt(int a, int b)
-{
-    std::random_device genDevice;
-    std::uniform_int_distribution<int> genDist(a, b);
-    return genDist(genDevice);
-}
-
-// return the filenames of all files that have the specified extension
-// in the specified directory and all subdirectories
-std::vector<fs::path> FindByExtension(
-    const fs::path root, const std::string ext)
-{
-    std::vector<fs::path> ret;
-    if (!fs::exists(root) || !fs::is_directory(root)) {
-        return ret;
-    }
-
-    fs::recursive_directory_iterator it(root);
-    fs::recursive_directory_iterator endit;
-
-    while (it != endit) {
-        if (fs::is_regular_file(*it) && it->path().extension() == ext) {
-            fs::path path = canonical(it->path());
-            ret.push_back(path);
-        }
-        ++it;
-    }
-
-    return ret;
-}
-
-
-// given path to image (wavelength).tif, return wavelength
-std::string ParseWavelength(fs::path imagePath)
-{
-    auto name = imagePath.stem().string();
-
-    auto pos3 = name.find("-");
-    if (pos3 != std::string::npos) {
-        name.replace(pos3, 1, ".");
-    }
-
-    return name;
-}
-
-cv::Mat ToneMap(cv::Mat m, float gamma = 1.0f)
-{
-    auto tmp = m.clone();
-    cv::cvtColor(tmp, tmp, CV_GRAY2BGR);
-    auto tonemap = cv::createTonemap(gamma);
-    tonemap->process(tmp, tmp);
-    cv::cvtColor(tmp, tmp, CV_BGR2GRAY);
-    return tmp;
-}
 
 // argv[1] == directory of wavelengths to be passed
 int main(int argc, char** argv)
@@ -85,7 +24,8 @@ int main(int argc, char** argv)
     fs::path csv_path = argv[2];
 
     ///// Collect the tif files /////
-    std::vector<fs::path> imgpaths = FindByExtension(img_dir, ".tif");
+    std::vector<fs::path> imgpaths =
+        envitools::FindByExtension(img_dir, ".tif");
 
     ///// Setup Sample Points and Regions ////
     std::vector<cv::Vec2i> inkpts, papypts;
@@ -112,11 +52,12 @@ int main(int argc, char** argv)
     PapyrusBoxes.push_back({852, 1285, 874, 1321});
 
     for (int i = 0; i < 500; i++) {
-        auto box_id = RandomInt(0, static_cast<int>(PapyrusBoxes.size() - 1));
+        auto box_id =
+            envitools::RandomInt(0, static_cast<int>(PapyrusBoxes.size() - 1));
         auto box = PapyrusBoxes[box_id];
 
-        auto x = RandomInt(box.xmin, box.xmax);
-        auto y = RandomInt(box.ymin, box.ymax);
+        auto x = envitools::RandomInt(box.xmin, box.xmax);
+        auto y = envitools::RandomInt(box.ymin, box.ymax);
         papypts.push_back({x, y});
     }
 
@@ -137,7 +78,7 @@ int main(int argc, char** argv)
         contrasts.clear();
 
         // Get wavelength for key
-        auto id = ParseWavelength(path);
+        auto id = envitools::ParseWavelength(path);
         std::cout << "Wavelength: " << id << "\r" << std::flush;
 
         // Load the image
@@ -148,7 +89,7 @@ int main(int argc, char** argv)
             continue;
         }
 
-        image = ToneMap(image, 2.2);
+        image = envitools::ToneMap(image, 2.2);
 
         // Michelson Contrast
         contrasts.push_back(envitools::ContrastMetrics::MichelsonContrast(
