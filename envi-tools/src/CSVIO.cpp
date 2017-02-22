@@ -32,20 +32,19 @@ std::vector<cv::Vec2i> CSVIO::ReadCSV(fs::path path)
     return output;
 }
 
-void CSVIO::WriteCSV(const std::vector<cv::Vec2i>& points, fs::path path)
+void CSVIO::WriteCSV(fs::path path, const std::vector<cv::Vec2i>& points)
 {
     std::ofstream myfile;
     myfile.open(path.string());
 
-    for (auto i : points) {
-        std::cout << points[0] << "," << points[1] << std::endl;
-        myfile << points[0] << "," << points[1] << std::endl;
+    for (auto pt : points) {
+        myfile << pt[0] << "," << pt[1] << std::endl;
     }
     myfile.close();
 }
 
 void CSVIO::WriteCSV(
-    fs::path path, std::map<std::string, std::vector<double>> res)
+    fs::path path, std::map<std::string, std::vector<double>>& res)
 {
     std::ofstream ofs;
     ofs.exceptions(std::ifstream::failbit | std::ifstream::badbit);

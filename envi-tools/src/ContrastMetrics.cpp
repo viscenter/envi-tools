@@ -4,25 +4,25 @@ using namespace envitools;
 
 double ContrastMetrics::MichelsonContrast(
     const cv::Mat& image,
-    const std::vector<cv::Vec2i>& fg_pts,
-    const std::vector<cv::Vec2i>& bg_pts)
+    const std::vector<cv::Vec2i>& fgPts,
+    const std::vector<cv::Vec2i>& bgPts)
 {
     // Foreground average
-    double fg_avg = 0.0;
-    double s = 1.0 / fg_pts.size();
-    for (auto i : fg_pts) {
-        fg_avg += image.at<float>(i[1], i[0]) * s;
+    double fgAvg = 0.0;
+    double sizeReciprocal = 1.0 / fgPts.size();
+    for (auto pt : fgPts) {
+        fgAvg += image.at<float>(pt[1], pt[0]) * sizeReciprocal;
     }
 
     // Background average
-    double bg_avg = 0.0;
-    s = 1.0 / bg_pts.size();
-    for (auto i : bg_pts) {
-        bg_avg += image.at<float>(i[1], i[0]) * s;
+    double bgAvg = 0.0;
+    sizeReciprocal = 1.0 / bgPts.size();
+    for (auto pt : bgPts) {
+        bgAvg += image.at<float>(pt[1], pt[0]) * sizeReciprocal;
     }
 
     // Contrast
-    return std::abs((fg_avg - bg_avg) / (fg_avg + bg_avg));
+    return std::abs((fgAvg - bgAvg) / (fgAvg + bgAvg));
 }
 
 double ContrastMetrics::RMSContrast(const cv::Mat& image, const Box& region)
@@ -30,8 +30,8 @@ double ContrastMetrics::RMSContrast(const cv::Mat& image, const Box& region)
     cv::Mat subImg = image(
         cv::Range(region.ymin, region.ymax),
         cv::Range(region.xmin, region.xmax));
-    cv::Scalar m, s;
-    cv::meanStdDev(subImg, m, s);
+    cv::Scalar mean, stdDev;
+    cv::meanStdDev(subImg, mean, stdDev);
 
-    return s[0];
+    return stdDev[0];
 }

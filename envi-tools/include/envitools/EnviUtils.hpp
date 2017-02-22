@@ -1,16 +1,15 @@
 #pragma once
 
 #include <random>
+
 #include <boost/filesystem.hpp>
 #include <opencv2/photo.hpp>
-
-namespace fs = boost::filesystem;
 
 namespace envitools
 {
 
 // given path to image (wavelength).tif, return wavelength
-static std::string ParseWavelength(fs::path imagePath)
+static std::string ParseWavelength(boost::filesystem::path imagePath)
 {
     auto name = imagePath.stem().string();
 
@@ -22,7 +21,7 @@ static std::string ParseWavelength(fs::path imagePath)
     return name;
 }
 
-static cv::Mat ToneMap(cv::Mat m, float gamma = 1.0f)
+static cv::Mat ToneMap(cv::Mat& m, float gamma = 1.0f)
 {
     auto tmp = m.clone();
     cv::cvtColor(tmp, tmp, CV_GRAY2BGR);
@@ -34,20 +33,22 @@ static cv::Mat ToneMap(cv::Mat m, float gamma = 1.0f)
 
 // return the filenames of all files that have the specified extension
 // in the specified directory and all subdirectories
-static std::vector<fs::path> FindByExtension(
-    const fs::path root, const std::string ext)
+static std::vector<boost::filesystem::path> FindByExtension(
+    const boost::filesystem::path root, const std::string ext)
 {
-    std::vector<fs::path> ret;
-    if (!fs::exists(root) || !fs::is_directory(root)) {
+    std::vector<boost::filesystem::path> ret;
+    if (!boost::filesystem::exists(root) ||
+        !boost::filesystem::is_directory(root)) {
         return ret;
     }
 
-    fs::recursive_directory_iterator it(root);
-    fs::recursive_directory_iterator endit;
+    boost::filesystem::recursive_directory_iterator it(root);
+    boost::filesystem::recursive_directory_iterator endit;
 
     while (it != endit) {
-        if (fs::is_regular_file(*it) && it->path().extension() == ext) {
-            fs::path path = canonical(it->path());
+        if (boost::filesystem::is_regular_file(*it) &&
+            it->path().extension() == ext) {
+            boost::filesystem::path path = canonical(it->path());
             ret.push_back(path);
         }
         ++it;

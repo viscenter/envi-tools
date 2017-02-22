@@ -1,6 +1,7 @@
 #include <fstream>
 #include <iostream>
 #include <random>
+
 #include <boost/filesystem.hpp>
 
 #include "envitools/CSVIO.hpp"
@@ -10,7 +11,7 @@
 int main(int argc, char** argv) {
     if (argc < 6) {
         std::cout << " Usage: " << argv[0];
-        std::cout << " xmin, ymin, xmax, ymax, output path" << std::endl;
+        std::cout << " [xmin] [ymin] [xmax] [ymax] [output path]" << std::endl;
         return EXIT_FAILURE;
     }
 
@@ -32,7 +33,7 @@ int main(int argc, char** argv) {
     boost::filesystem::path path = argv[5];
 
     if (boost::filesystem::exists(path)) {
-        envitools::CSVIO::WriteCSV(vec, path);
+        envitools::CSVIO::WriteCSV(path, vec);
     }
 
     return 0;

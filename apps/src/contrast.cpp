@@ -8,7 +8,9 @@
 #include "envitools/ContrastMetrics.hpp"
 #include "envitools/EnviUtils.hpp"
 
-constexpr static uint16_t MAX_INTENSITY = std::numeric_limits<uint16_t>::max();
+namespace fs = boost::filesystem;
+
+namespace et = envitools;
 
 // argv[1] == directory of wavelengths to be passed
 int main(int argc, char** argv)
@@ -24,8 +26,7 @@ int main(int argc, char** argv)
     fs::path csv_path = argv[2];
 
     ///// Collect the tif files /////
-    std::vector<fs::path> imgpaths =
-        envitools::FindByExtension(img_dir, ".tif");
+    std::vector<fs::path> imgpaths = et::FindByExtension(img_dir, ".tif");
 
     ///// Setup Sample Points and Regions ////
     std::vector<cv::Vec2i> inkpts, papypts;
@@ -44,7 +45,7 @@ int main(int argc, char** argv)
     inkpts.push_back({769, 1682});
 
     // Regions of papyrus with randomly generated points (for Michelson)
-    std::vector<envitools::Box> PapyrusBoxes;
+    std::vector<et::Box> PapyrusBoxes;
     PapyrusBoxes.push_back({464, 1512, 487, 1540});
     PapyrusBoxes.push_back({552, 1512, 576, 1569});
     PapyrusBoxes.push_back({694, 496, 715, 558});
@@ -53,16 +54,16 @@ int main(int argc, char** argv)
 
     for (int i = 0; i < 500; i++) {
         auto box_id =
-            envitools::RandomInt(0, static_cast<int>(PapyrusBoxes.size() - 1));
+            et::RandomInt(0, static_cast<int>(PapyrusBoxes.size() - 1));
         auto box = PapyrusBoxes[box_id];
 
-        auto x = envitools::RandomInt(box.xmin, box.xmax);
-        auto y = envitools::RandomInt(box.ymin, box.ymax);
+        auto x = et::RandomInt(box.xmin, box.xmax);
+        auto y = et::RandomInt(box.ymin, box.ymax);
         papypts.push_back({x, y});
     }
 
     // Regions of ink and papyrus (for RMS)
-    std::vector<envitools::Box> InkPapyrusBoxes;
+    std::vector<et::Box> InkPapyrusBoxes;
     InkPapyrusBoxes.push_back({763, 1515, 828, 1549});
     InkPapyrusBoxes.push_back({670, 1483, 732, 1563});
     InkPapyrusBoxes.push_back({833, 1293, 852, 1328});
@@ -78,7 +79,7 @@ int main(int argc, char** argv)
         contrasts.clear();
 
         // Get wavelength for key
-        auto id = envitools::ParseWavelength(path);
+        auto id = et::ParseWavelength(path);
         std::cout << "Wavelength: " << id << "\r" << std::flush;
 
         // Load the image
@@ -89,16 +90,15 @@ int main(int argc, char** argv)
             continue;
         }
 
-        image = envitools::ToneMap(image, 2.2);
+        image = et::ToneMap(image, 2.2);
 
         // Michelson Contrast
-        contrasts.push_back(envitools::ContrastMetrics::MichelsonContrast(
-            image, inkpts, papypts));
+        contrasts.push_back(
+            et::ContrastMetrics::MichelsonContrast(image, inkpts, papypts));
 
         // RMS Contrast
         for (auto box : InkPapyrusBoxes) {
-            contrasts.push_back(
-                envitools::ContrastMetrics::RMSContrast(image, box));
+            contrasts.push_back(et::ContrastMetrics::RMSContrast(image, box));
         }
 
         // Add to the map
@@ -108,7 +108,7 @@ int main(int argc, char** argv)
 
     ///// Write to a CSV /////
     std::cout << "Writing CSV..." << std::endl;
-    envitools::CSVIO::WriteCSV(csv_path, wavelength_results);
+    et::CSVIO::WriteCSV(csv_path, wavelength_results);
 
     std::cout << "Done." << std::endl;
     return 0;
