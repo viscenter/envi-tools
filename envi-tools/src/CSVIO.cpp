@@ -44,7 +44,7 @@ void CSVIO::WriteCSV(fs::path path, const std::vector<cv::Vec2i>& points)
 }
 
 void CSVIO::WriteCSV(
-    fs::path path, std::map<std::string, std::vector<double>>& res)
+    fs::path path, const std::map<std::string, std::vector<double>>& res)
 {
     std::ofstream ofs;
     ofs.exceptions(std::ifstream::failbit | std::ifstream::badbit);

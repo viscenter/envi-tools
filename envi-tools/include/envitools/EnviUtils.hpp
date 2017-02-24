@@ -21,7 +21,7 @@ static std::string ParseWavelength(boost::filesystem::path imagePath)
     return name;
 }
 
-static cv::Mat ToneMap(cv::Mat& m, float gamma = 1.0f)
+static cv::Mat ToneMap(const cv::Mat& m, float gamma = 1.0f)
 {
     auto tmp = m.clone();
     cv::cvtColor(tmp, tmp, CV_GRAY2BGR);

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <map>
+
 #include <boost/filesystem.hpp>
 #include <opencv2/core.hpp>
 
@@ -18,6 +19,6 @@ public:
 
     static void WriteCSV(
         boost::filesystem::path path,
-        std::map<std::string, std::vector<double>>& res);
+        const std::map<std::string, std::vector<double>>& res);
 };
 }
