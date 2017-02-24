@@ -13,12 +13,9 @@ public:
     // take filename, return vector of points
     static std::vector<cv::Vec2i> ReadCSV(boost::filesystem::path path);
 
-    // take filename and vector, create csv file
-    static void WriteCSV(
-        boost::filesystem::path path, const std::vector<cv::Vec2i>& points);
-
     static void WriteCSV(
         boost::filesystem::path path,
-        const std::map<std::string, std::vector<double>>& res);
+        const std::map<std::string, std::vector<double>>& res,
+        const std::vector<std::string>& header = {});
 };
 }

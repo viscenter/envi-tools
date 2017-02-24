@@ -1,9 +1,8 @@
 #include "envitools/ContrastMetrics.hpp"
 
 using namespace envitools;
-using namespace ContrastMetrics;
 
-double MichelsonContrast(
+double ContrastMetrics::MichelsonContrast(
     const cv::Mat& image,
     const std::vector<cv::Vec2i>& fgPts,
     const std::vector<cv::Vec2i>& bgPts)
@@ -26,7 +25,7 @@ double MichelsonContrast(
     return std::abs((fgAvg - bgAvg) / (fgAvg + bgAvg));
 }
 
-double RMSContrast(const cv::Mat& image, const Box& region)
+double ContrastMetrics::RMSContrast(const cv::Mat& image, const Box& region)
 {
     cv::Mat subImg = image(
         cv::Range(region.ymin, region.ymax),
