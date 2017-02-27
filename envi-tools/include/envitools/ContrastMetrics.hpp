@@ -14,5 +14,5 @@ double MichelsonContrast(
     const std::vector<cv::Vec2i>& bgPts);
 
 double RMSContrast(const cv::Mat& image, const Box& region);
-    }
+}
 }

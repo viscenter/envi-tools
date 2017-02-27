@@ -62,5 +62,5 @@ static int RandomInt(int a, int b)
     std::random_device genDevice;
     std::uniform_int_distribution<int> genDist(a, b);
     return genDist(genDevice);
-};
+}
 }

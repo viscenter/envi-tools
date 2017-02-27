@@ -37,33 +37,30 @@ void CSVIO::WriteCSV(
     const std::map<std::string, std::vector<double>>& res,
     const std::vector<std::string>& header)
 {
-    std::ofstream ofs;
-    ofs.exceptions(std::ifstream::failbit | std::ifstream::badbit);
-    try {
-        ofs.open(path.string());
+    std::ofstream ofs(path.string());
 
-        if (!(header.empty())) {
-            // Write the header
-            ofs << header[0] << header[1] << header[2] << header[3] << header[4]
-                << header[5] << std::endl;
-        }
-
-        // Write the data
-        for (auto k : res) {
-            // Wavelength
-            ofs << k.first;
-
-            // Contrast
-            for (auto c : k.second) {
-                ofs << "," << c;
-            }
-            ofs << std::endl;
-        }
-
-        // Close the file
-        ofs.close();
-    } catch (std::ifstream::failure e) {
-        std::cerr << e.what() << std::endl;
-        return;
+    if (!ofs.good()) {
+        throw std::runtime_error("File failed to open");
     }
+
+    // Write the header
+    for (auto h : header) {
+        ofs << h << ",";
+    }
+    ofs << std::endl;
+
+    // Write the data
+    for (auto k : res) {
+        // Wavelength
+        ofs << k.first;
+
+        // Contrast
+        for (auto c : k.second) {
+            ofs << "," << c;
+        }
+        ofs << std::endl;
+    }
+
+    // Close the file
+    ofs.close();
 }
