@@ -33,6 +33,17 @@ std::vector<cv::Vec2i> CSVIO::ReadCSV(fs::path path)
 }
 
 void CSVIO::WriteCSV(
+    boost::filesystem::path path, const std::vector<cv::Vec2i>& vec)
+{
+    std::ofstream myfile;
+    myfile.open(path.string());
+    for (auto pt : vec) {
+        myfile << pt[0] << "," << pt[1] << std::endl;
+    }
+    myfile.close();
+}
+
+void CSVIO::WriteCSV(
     fs::path path,
     const std::map<std::string, std::vector<double>>& res,
     const std::vector<std::string>& header)

@@ -25,8 +25,8 @@ int main(int argc, char** argv) {
     std::cout << "X,Y" << std::endl;
     std::vector<cv::Vec2i> vec;
     for (int i = 0; i < num_points; i++) {
-        int x = envitools::RandomInt(xmin, xmax);
-        int y = envitools::RandomInt(ymin, ymax);
+        auto x = envitools::RandomInt(xmin, xmax);
+        auto y = envitools::RandomInt(ymin, ymax);
         vec.emplace_back(x, y);
         std::cout << x << "," << y << std::endl;
     }

@@ -106,9 +106,13 @@ int main(int argc, char** argv)
     }
     std::cout << std::endl;
 
+    // CSV Header //
+    std::vector<std::string> header{"wavelength", "michel", "rms0",
+                                    "rms1",       "rms2",   "rms3"};
+
     ///// Write to a CSV /////
     std::cout << "Writing CSV..." << std::endl;
-    et::CSVIO::WriteCSV(csv_path, wavelength_results);
+    et::CSVIO::WriteCSV(csv_path, wavelength_results, header);
 
     std::cout << "Done." << std::endl;
     return 0;
