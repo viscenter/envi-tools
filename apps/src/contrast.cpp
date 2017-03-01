@@ -1,147 +1,16 @@
 #include <iostream>
-#include <map>
-#include <random>
 #include <opencv2/core.hpp>
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc.hpp>
-#include <opencv2/photo.hpp>
 
-#include <boost/filesystem.hpp>
+#include "envitools/Box.hpp"
+#include "envitools/CSVIO.hpp"
+#include "envitools/ContrastMetrics.hpp"
+#include "envitools/EnviUtils.hpp"
 
 namespace fs = boost::filesystem;
 
-constexpr static uint16_t MAX_INTENSITY = std::numeric_limits<uint16_t>::max();
-
-struct Box {
-    Box() : xmin(0), xmax(0), ymin(0), ymax(0){};
-    Box(int x_min, int y_min, int x_max, int y_max)
-        : xmin(x_min), xmax(x_max), ymin(y_min), ymax(y_max){};
-    int xmin, xmax, ymin, ymax;
-};
-
-// returns random int on interval [a,b]
-int RandomInt(int a, int b)
-{
-    std::random_device genDevice;
-    std::uniform_int_distribution<int> genDist(a, b);
-    return genDist(genDevice);
-}
-
-// return the filenames of all files that have the specified extension
-// in the specified directory and all subdirectories
-std::vector<fs::path> FindByExtension(
-    const fs::path root, const std::string ext)
-{
-    std::vector<fs::path> ret;
-    if (!fs::exists(root) || !fs::is_directory(root)) {
-        return ret;
-    }
-
-    fs::recursive_directory_iterator it(root);
-    fs::recursive_directory_iterator endit;
-
-    while (it != endit) {
-        if (fs::is_regular_file(*it) && it->path().extension() == ext) {
-            fs::path path = canonical(it->path());
-            ret.push_back(path);
-        }
-        ++it;
-    }
-
-    return ret;
-}
-
-// returns contrast from set of points using michelson metric (Gene Ware)
-double MichelsonContrast(
-    cv::Mat image, std::vector<cv::Vec2i> fg_pts, std::vector<cv::Vec2i> bg_pts)
-{
-    // Foreground average
-    double fg_avg = 0.0;
-    double s = 1.0 / fg_pts.size();
-    for (auto i : fg_pts) {
-        fg_avg += image.at<float>(i[1], i[0]) * s;
-    }
-
-    // Background average
-    double bg_avg = 0.0;
-    s = 1.0 / bg_pts.size();
-    for (auto i : bg_pts) {
-        bg_avg += image.at<float>(i[1], i[0]) * s;
-    }
-
-    // Contrast
-    return std::abs((fg_avg - bg_avg) / (fg_avg + bg_avg));
-}
-
-// returns contrast of a subregion using root mean square metric
-double RMSContrast(cv::Mat image, Box region)
-{
-    cv::Mat subImg = image(
-        cv::Range(region.ymin, region.ymax),
-        cv::Range(region.xmin, region.xmax));
-    cv::Scalar m, s;
-    cv::meanStdDev(subImg, m, s);
-
-    return s[0];
-}
-
-// given path to image (wavelength).tif, return wavelength
-std::string ParseWavelength(fs::path imagePath)
-{
-    auto name = imagePath.stem().string();
-
-    auto pos3 = name.find("-");
-    if (pos3 != std::string::npos) {
-        name.replace(pos3, 1, ".");
-    }
-
-    return name;
-}
-
-cv::Mat ToneMap(cv::Mat m, float gamma = 1.0f)
-{
-    auto tmp = m.clone();
-    cv::cvtColor(tmp, tmp, CV_GRAY2BGR);
-    auto tonemap = cv::createTonemap(gamma);
-    tonemap->process(tmp, tmp);
-    cv::cvtColor(tmp, tmp, CV_BGR2GRAY);
-    return tmp;
-}
-
-void WriteCSV(fs::path path, std::map<std::string, std::vector<double>> res)
-{
-    std::ofstream ofs;
-    ofs.exceptions(std::ifstream::failbit | std::ifstream::badbit);
-    try {
-        ofs.open(path.string());
-
-        // Write the header
-        ofs << "wavelength,"
-            << "michel,"
-            << "rms0,"
-            << "rms1,"
-            << "rms2,"
-            << "rms3" << std::endl;
-
-        // Write the data
-        for (auto k : res) {
-            // Wavelength
-            ofs << k.first;
-
-            // Contrast
-            for (auto c : k.second) {
-                ofs << "," << c;
-            }
-            ofs << std::endl;
-        }
-
-        // Close the file
-        ofs.close();
-    } catch (std::ifstream::failure e) {
-        std::cerr << e.what() << std::endl;
-        return;
-    }
-}
+namespace et = envitools;
 
 // argv[1] == directory of wavelengths to be passed
 int main(int argc, char** argv)
@@ -157,7 +26,7 @@ int main(int argc, char** argv)
     fs::path csv_path = argv[2];
 
     ///// Collect the tif files /////
-    std::vector<fs::path> imgpaths = FindByExtension(img_dir, ".tif");
+    std::vector<fs::path> imgpaths = et::FindByExtension(img_dir, ".tif");
 
     ///// Setup Sample Points and Regions ////
     std::vector<cv::Vec2i> inkpts, papypts;
@@ -176,7 +45,7 @@ int main(int argc, char** argv)
     inkpts.push_back({769, 1682});
 
     // Regions of papyrus with randomly generated points (for Michelson)
-    std::vector<Box> PapyrusBoxes;
+    std::vector<et::Box> PapyrusBoxes;
     PapyrusBoxes.push_back({464, 1512, 487, 1540});
     PapyrusBoxes.push_back({552, 1512, 576, 1569});
     PapyrusBoxes.push_back({694, 496, 715, 558});
@@ -184,16 +53,17 @@ int main(int argc, char** argv)
     PapyrusBoxes.push_back({852, 1285, 874, 1321});
 
     for (int i = 0; i < 500; i++) {
-        auto box_id = RandomInt(0, static_cast<int>(PapyrusBoxes.size() - 1));
+        auto box_id =
+            et::RandomInt(0, static_cast<int>(PapyrusBoxes.size() - 1));
         auto box = PapyrusBoxes[box_id];
 
-        auto x = RandomInt(box.xmin, box.xmax);
-        auto y = RandomInt(box.ymin, box.ymax);
+        auto x = et::RandomInt(box.xmin, box.xmax);
+        auto y = et::RandomInt(box.ymin, box.ymax);
         papypts.push_back({x, y});
     }
 
     // Regions of ink and papyrus (for RMS)
-    std::vector<Box> InkPapyrusBoxes;
+    std::vector<et::Box> InkPapyrusBoxes;
     InkPapyrusBoxes.push_back({763, 1515, 828, 1549});
     InkPapyrusBoxes.push_back({670, 1483, 732, 1563});
     InkPapyrusBoxes.push_back({833, 1293, 852, 1328});
@@ -209,7 +79,7 @@ int main(int argc, char** argv)
         contrasts.clear();
 
         // Get wavelength for key
-        auto id = ParseWavelength(path);
+        auto id = et::ParseWavelength(path);
         std::cout << "Wavelength: " << id << "\r" << std::flush;
 
         // Load the image
@@ -220,14 +90,15 @@ int main(int argc, char** argv)
             continue;
         }
 
-        image = ToneMap(image, 2.2);
+        image = et::ToneMap(image, 2.2);
 
         // Michelson Contrast
-        contrasts.push_back(MichelsonContrast(image, inkpts, papypts));
+        contrasts.push_back(
+            et::ContrastMetrics::MichelsonContrast(image, inkpts, papypts));
 
         // RMS Contrast
         for (auto box : InkPapyrusBoxes) {
-            contrasts.push_back(RMSContrast(image, box));
+            contrasts.push_back(et::ContrastMetrics::RMSContrast(image, box));
         }
 
         // Add to the map
@@ -235,9 +106,13 @@ int main(int argc, char** argv)
     }
     std::cout << std::endl;
 
+    // CSV Header //
+    std::vector<std::string> header{"wavelength", "michel", "rms0",
+                                    "rms1",       "rms2",   "rms3"};
+
     ///// Write to a CSV /////
     std::cout << "Writing CSV..." << std::endl;
-    WriteCSV(csv_path, wavelength_results);
+    et::CSVIO::WriteCSV(csv_path, wavelength_results, header);
 
     std::cout << "Done." << std::endl;
     return 0;

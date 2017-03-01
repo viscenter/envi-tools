@@ -1,4 +1,4 @@
-#include "envi-tools/ENVI.hpp"
+#include "envitools/ENVI.hpp"
 
 #include <regex>
 

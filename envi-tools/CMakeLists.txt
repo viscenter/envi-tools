@@ -3,7 +3,9 @@ set(module "envitools")
 set(target "${module}")
 
 set(srcs
-        src/ENVI.cpp
+    src/ENVI.cpp
+    src/CSVIO.cpp
+    src/ContrastMetrics.cpp
 )
 
 add_library(${target} ${srcs})
