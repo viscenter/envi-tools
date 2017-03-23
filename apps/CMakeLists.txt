@@ -17,10 +17,11 @@ target_link_libraries(et_convert
     opencv_photo
 )
 
-add_executable(et_PointGenerator src/randomPointGenerator.cpp)
-target_link_libraries(et_PointGenerator
+add_executable(et_roi_rng src/randomPointGenerator.cpp)
+target_link_libraries(et_roi_rng
     ET::envitools
     Boost::filesystem
+    Boost::program_options
 )
 
 add_executable(et_ReadENVI src/ReadENVI.cpp)

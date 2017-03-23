@@ -1,11 +1,14 @@
 #include <fstream>
 #include <iostream>
 #include <random>
-
 #include <boost/filesystem.hpp>
+#include <boost/program_options.hpp>
 
 #include "envitools/CSVIO.hpp"
 #include "envitools/EnviUtils.hpp"
+
+namespace fs = boost::filesystem;
+namespace po = boost::program_options;
 
 // argv == et_PointGenerator xmin, ymin, xmax, ymax, total points, output path
 int main(int argc, char** argv) {
@@ -13,6 +16,38 @@ int main(int argc, char** argv) {
         std::cout << " Usage: " << argv[0];
         std::cout << " [xmin] [ymin] [xmax] [ymax] [total points] [output path]"
                   << std::endl;
+        return EXIT_FAILURE;
+    }
+
+    fs::path outputPath;
+
+    // clang-format off
+    po::options_description options("Options");
+    options.add_options()("help,h", "Show this message")(
+        "input-file,i", po::value<std::string>()->required(),
+        "Input file path of ROIs");
+    ("output-file,o", po::value<std::string>()->required(), "Output file path");
+    ("number-points,p", po::value<int>()->required(),
+     "total number of points to generate");
+    // clang-format on
+
+    // parsedOptions will hold the value of all parsed options as a Map
+    po::variables_map parsedOptions;
+    po::store(
+        po::command_line_parser(argc, argv).options(options).run(),
+        parsedOptions);
+
+    // show the help message
+    if (parsedOptions.count("help") || argc < 3) {
+        std::cout << options << std::endl;
+        return EXIT_SUCCESS;
+    }
+
+    // warn of missing options
+    try {
+        po::notify(parsedOptions);
+    } catch (po::error& e) {
+        std::cerr << "Error: " << e.what() << std::endl;
         return EXIT_FAILURE;
     }
 
@@ -31,7 +66,7 @@ int main(int argc, char** argv) {
         std::cout << x << "," << y << std::endl;
     }
 
-    boost::filesystem::path path = argv[5];
+    fs::path path = argv[5];
 
     if (!(boost::filesystem::exists(path))) {
         envitools::CSVIO::WriteCSV(path, vec);
