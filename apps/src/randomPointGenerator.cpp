@@ -12,13 +12,6 @@ namespace po = boost::program_options;
 
 // argv == et_PointGenerator xmin, ymin, xmax, ymax, total points, output path
 int main(int argc, char** argv) {
-    if (argc < 7) {
-        std::cout << " Usage: " << argv[0];
-        std::cout << " [xmin] [ymin] [xmax] [ymax] [total points] [output path]"
-                  << std::endl;
-        return EXIT_FAILURE;
-    }
-
     fs::path outputPath;
 
     // clang-format off
