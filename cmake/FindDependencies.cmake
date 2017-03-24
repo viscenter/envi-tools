@@ -7,7 +7,7 @@
 find_package(Sanitizers)
 
 ### Boost ###
-find_package(Boost REQUIRED COMPONENTS filesystem)
+find_package(Boost REQUIRED COMPONENTS filesystem program_options)
 
 ### OpenCV ###
 find_package(OpenCV 3 REQUIRED)
