@@ -9,10 +9,11 @@
 
 namespace fs = boost::filesystem;
 namespace po = boost::program_options;
+namespace et = envitools;
 
 // argv == et_PointGenerator xmin, ymin, xmax, ymax, total points, output path
 int main(int argc, char** argv) {
-    fs::path outputPath;
+    fs::path inputPath, outputPath;
 
     // clang-format off
     po::options_description options("Options");
@@ -43,12 +44,24 @@ int main(int argc, char** argv) {
         std::cerr << "Error: " << e.what() << std::endl;
         return EXIT_FAILURE;
     }
+    
+    // Get the output path
+    csvPath = parsedOptions["output-file"].as<std::string>();
+    
+    // Get the ROI CSV file path
+    inputPath = parsedOptions["input-file"].as<std::string>();
+    
+    // Read ROIs into vector
+    std::vector<Box> vecROIs = et::CSVIO::ROICSV(inputPath);
+    
+    // Get number of points to generate
+    int num_points = parsedOptions["number-points"].as<std::int>();
 
     int xmin = std::stoi(argv[1]);
     int ymin = std::stoi(argv[2]);
     int xmax = std::stoi(argv[3]);
     int ymax = std::stoi(argv[4]);
-    int num_points = std::stoi(argv[5]);
+    //int num_points = std::stoi(argv[5]);
 
     std::cout << "X,Y" << std::endl;
     std::vector<cv::Vec2i> vec;
