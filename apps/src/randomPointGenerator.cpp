@@ -46,25 +46,30 @@ int main(int argc, char** argv) {
         std::cerr << "Error: " << e.what() << std::endl;
         return EXIT_FAILURE;
     }
-    
+
+    // Get the ROI CSV file path
+    inputPath = parsedOptions["input-file"].as<std::string>();
+
+    if (!(boost::filesystem::exists(inputPath))) {
+        std::cerr << "Error: File path does not exist." << std::endl;
+        return EXIT_FAILURE;
+    }
+
     // Get the output path
     csvPath = parsedOptions["output-file"].as<std::string>();
 
     if (boost::filesystem::exists(csvPath)) {
         std::cerr
-            << "Error file path already exists. Cannot overwrite output file."
+            << "Error: File path already exists. Cannot overwrite output file."
             << std::endl;
         return EXIT_FAILURE;
     }
 
-    // Get the ROI CSV file path
-    inputPath = parsedOptions["input-file"].as<std::string>();
-    
     // Read ROIs into vector
     auto vecROIs = et::CSVIO::ReadROICSV(inputPath);
 
     // Get number of points to generate
-    int numPoints = parsedOptions["point-count"].as<int>();
+    auto numPoints = parsedOptions["point-count"].as<int>();
 
     std::cout << "X,Y" << std::endl;
     std::vector<cv::Vec2i> vec;
