@@ -13,16 +13,18 @@ namespace et = envitools;
 
 // argv == et_PointGenerator xmin, ymin, xmax, ymax, total points, output path
 int main(int argc, char** argv) {
-    fs::path inputPath, outputPath;
+    fs::path inputPath, csvPath;
 
     // clang-format off
     po::options_description options("Options");
-    options.add_options()("help,h", "Show this message")(
-        "input-file,i", po::value<std::string>()->required(),
-        "Input file path of ROIs");
-    ("output-file,o", po::value<std::string>()->required(), "Output file path");
-    ("number-points,p", po::value<int>()->required(),
-     "total number of points to generate");
+    options.add_options()
+        ("help,h", "Show this message")
+        ("input-file,i", po::value<std::string>()->required(),
+            "Input file path of ROIs")
+        ("output-file,o", po::value<std::string>()->required(),
+            "Output file path")
+        ("point-count,p", po::value<int>()->required(),
+            "total number of points to generate");
     // clang-format on
 
     // parsedOptions will hold the value of all parsed options as a Map
@@ -32,7 +34,7 @@ int main(int argc, char** argv) {
         parsedOptions);
 
     // show the help message
-    if (parsedOptions.count("help") || argc < 3) {
+    if (parsedOptions.count("help") || argc < 4) {
         std::cout << options << std::endl;
         return EXIT_SUCCESS;
     }
@@ -52,30 +54,23 @@ int main(int argc, char** argv) {
     inputPath = parsedOptions["input-file"].as<std::string>();
     
     // Read ROIs into vector
-    std::vector<Box> vecROIs = et::CSVIO::ROICSV(inputPath);
-    
-    // Get number of points to generate
-    int num_points = parsedOptions["number-points"].as<std::int>();
+    auto vecROIs = et::CSVIO::ReadROICSV(inputPath);
 
-    int xmin = std::stoi(argv[1]);
-    int ymin = std::stoi(argv[2]);
-    int xmax = std::stoi(argv[3]);
-    int ymax = std::stoi(argv[4]);
-    //int num_points = std::stoi(argv[5]);
+    // Get number of points to generate
+    int num_points = parsedOptions["point-count"].as<int>();
 
     std::cout << "X,Y" << std::endl;
     std::vector<cv::Vec2i> vec;
     for (int i = 0; i < num_points; i++) {
-        auto x = envitools::RandomInt(xmin, xmax);
-        auto y = envitools::RandomInt(ymin, ymax);
+        auto roi = vecROIs[envitools::RandomInt(0, vecROIs.size())];
+        auto x = envitools::RandomInt(roi.xmin, roi.xmax);
+        auto y = envitools::RandomInt(roi.ymin, roi.ymax);
         vec.emplace_back(x, y);
         std::cout << x << "," << y << std::endl;
     }
 
-    fs::path path = argv[5];
-
-    if (!(boost::filesystem::exists(path))) {
-        envitools::CSVIO::WriteCSV(path, vec);
+    if (!(boost::filesystem::exists(inputPath))) {
+        envitools::CSVIO::WriteCSV(csvPath, vec);
     }
 
     return 0;
