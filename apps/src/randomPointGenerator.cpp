@@ -49,7 +49,14 @@ int main(int argc, char** argv) {
     
     // Get the output path
     csvPath = parsedOptions["output-file"].as<std::string>();
-    
+
+    if (boost::filesystem::exists(csvPath)) {
+        std::cerr
+            << "Error file path already exists. Cannot overwrite output file."
+            << std::endl;
+        return EXIT_FAILURE;
+    }
+
     // Get the ROI CSV file path
     inputPath = parsedOptions["input-file"].as<std::string>();
     
@@ -57,21 +64,19 @@ int main(int argc, char** argv) {
     auto vecROIs = et::CSVIO::ReadROICSV(inputPath);
 
     // Get number of points to generate
-    int num_points = parsedOptions["point-count"].as<int>();
+    int numPoints = parsedOptions["point-count"].as<int>();
 
     std::cout << "X,Y" << std::endl;
     std::vector<cv::Vec2i> vec;
-    for (int i = 0; i < num_points; i++) {
-        auto roi = vecROIs[envitools::RandomInt(0, vecROIs.size())];
+    for (int i = 0; i < numPoints; i++) {
+        auto roi = vecROIs[envitools::RandomInt(0, vecROIs.size() - 1)];
         auto x = envitools::RandomInt(roi.xmin, roi.xmax);
         auto y = envitools::RandomInt(roi.ymin, roi.ymax);
         vec.emplace_back(x, y);
         std::cout << x << "," << y << std::endl;
     }
 
-    if (!(boost::filesystem::exists(inputPath))) {
-        envitools::CSVIO::WriteCSV(csvPath, vec);
-    }
+    envitools::CSVIO::WriteCSV(csvPath, vec);
 
     return 0;
 }
