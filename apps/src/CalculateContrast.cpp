@@ -1,5 +1,4 @@
 #include <iostream>
-
 #include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
 #include <opencv2/core.hpp>

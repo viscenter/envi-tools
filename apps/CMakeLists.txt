@@ -11,7 +11,9 @@ target_link_libraries(et_contrast
 
 add_executable(et_convert src/convert.cpp)
 target_link_libraries(et_convert
+    ET::envitools
     Boost::filesystem
+    Boost::program_options
     opencv_core
     opencv_imgcodecs
     opencv_photo
