@@ -11,7 +11,8 @@ namespace fs = boost::filesystem;
 namespace po = boost::program_options;
 namespace et = envitools;
 
-constexpr static uint16_t MAX_INTENSITY = std::numeric_limits<uint16_t>::max();
+constexpr static uint16_t MAX_INTENSITY_16BPC = std::numeric_limits<uint16_t>::max();
+constexpr static uint8_t MAX_INTENSITY_8BPC = std::numeric_limits<uint8_t>::max();
 
 int main(int argc, char* argv[])
 {
@@ -54,7 +55,7 @@ int main(int argc, char* argv[])
 
     ///// Collect the tif files /////
     imgDir = parsedOptions["input-dir"].as<std::string>();
-    std::vector<fs::path> imgPaths = et::FindByExtension(imgDir, ".tif");
+    auto imgPaths = et::FindByExtension(imgDir, ".tif");
     if (imgPaths.empty()) {
         std::cerr << "Error opening/parsing image directory. No files found."
                   << std::endl;
