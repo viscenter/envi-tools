@@ -27,8 +27,10 @@ int main(int argc, char* argv[])
         ("help,h","Show this message")
         ("input-dir,i",po::value<std::string>()->required(),
             "Input directory of wavelengths")
-        ("bit-depth,b",po::value<int>(),
-            "Bit depth for conversion")
+        ("bit-depth,b",po::value<int>()->default_value(1),
+            "Bit depth:\n"
+            " 0 = 8bpc (unsigned)\n"
+            " 1 = 16bpc (unsigned)\n")
         ("output-file,o", po::value<std::string>()->required(),
             "Output file path");
     // clang-format on
