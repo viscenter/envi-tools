@@ -16,6 +16,7 @@ constexpr static uint8_t MAX_INTENSITY_8BPC = std::numeric_limits<uint8_t>::max(
 
 int main(int argc, char* argv[])
 {
+    enum class BitDepth { Unsigned8 = 0, Unsigned16 };
 
     ///// Parse the cmd line /////
     fs::path imgDir, outputPath;
@@ -26,6 +27,8 @@ int main(int argc, char* argv[])
         ("help,h","Show this message")
         ("input-dir,i",po::value<std::string>()->required(),
             "Input directory of wavelengths")
+        ("bit-depth,b",po::value<int>(),
+            "Bit depth for conversion")
         ("output-file,o", po::value<std::string>()->required(),
             "Output file path");
     // clang-format on
@@ -49,6 +52,9 @@ int main(int argc, char* argv[])
         std::cerr << "ERROR: " << e.what() << std::endl;
         return EXIT_FAILURE;
     }
+
+    // Get the bit depth
+    auto depth = static_cast<BitDepth>(parsedOptions["bit-depth"].as<int>());
 
     // Get the output path
     outputPath = parsedOptions["output-file"].as<std::string>();
@@ -80,8 +86,17 @@ int main(int argc, char* argv[])
 
         image = et::ToneMap(image, 2.2);
 
-        image *= MAX_INTENSITY;
-        image.convertTo(image, CV_16UC1);
+        switch (depth) {
+            case BitDepth::Unsigned8:
+                image *= MAX_INTENSITY_8BPC;
+                image.convertTo(image, CV_8UC1);
+                break;
+            case BitDepth::Unsigned16:
+                image *= MAX_INTENSITY_16BPC;
+                image.convertTo(image, CV_16UC1);
+                break;
+        }
+
         fs::path outpath = outputPath / (id + ".tif");
         cv::imwrite(outpath.string(), image);
     }
