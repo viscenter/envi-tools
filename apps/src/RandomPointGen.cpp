@@ -11,7 +11,6 @@ namespace fs = boost::filesystem;
 namespace po = boost::program_options;
 namespace et = envitools;
 
-// argv == et_PointGenerator xmin, ymin, xmax, ymax, total points, output path
 int main(int argc, char** argv) {
     fs::path inputPath, csvPath;
 

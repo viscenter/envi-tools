@@ -9,15 +9,17 @@ target_link_libraries(et_contrast
     opencv_imgproc
 )
 
-add_executable(et_convert src/convert.cpp)
+add_executable(et_convert src/Convert.cpp)
 target_link_libraries(et_convert
+    ET::envitools
     Boost::filesystem
+    Boost::program_options
     opencv_core
     opencv_imgcodecs
     opencv_photo
 )
 
-add_executable(et_roi_rng src/randomPointGenerator.cpp)
+add_executable(et_roi_rng src/RandomPointGen.cpp)
 target_link_libraries(et_roi_rng
     ET::envitools
     Boost::filesystem
