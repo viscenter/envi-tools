@@ -21,10 +21,12 @@ int main(int argc, char** argv)
     po::options_description options("Options");
     options.add_options()
         ("help,h","Show this message")
-        ("hdr-path,p", po::value<std::string>()->required(),
-            "Path of ENVI file")
+        ("input-file,i", po::value<std::string>()->required(),
+            "Path to the ENVI header file")
         ("band,b", po::value<int>()->required(),
-            "Band to extract");
+            "Band to extract")
+        ("output-dir,o", po::value<std::string>()->required(),
+            "Output directory");
     // clang-format on
 
     // parsedOptions will hold the value of all parsed options as a Map
@@ -34,7 +36,7 @@ int main(int argc, char** argv)
         parsedOptions);
 
     // show the help message
-    if (parsedOptions.count("help") || argc < 3) {
+    if (parsedOptions.count("help") || argc < 4) {
         std::cout << options << std::endl;
         return EXIT_SUCCESS;
     }
@@ -48,7 +50,7 @@ int main(int argc, char** argv)
     }
 
     // Get the hdr path
-    hdrPath = parsedOptions["hdr-path"].as<std::string>();
+    hdrPath = parsedOptions["input-file"].as<std::string>();
 
     if (!(boost::filesystem::exists(hdrPath))) {
         std::cerr << "Error: File path does not exist." << std::endl;
@@ -70,7 +72,7 @@ int main(int argc, char** argv)
     auto m = envi.getBand(band);
 
     // Select file extension
-    fs::path out = envi.getWavelength(band) + ".jpg";
+    fs::path out = envi.getWavelength(band) + ".png";
     if (m.depth() == CV_32F) {
         out.replace_extension("hdr");
     } else if (m.depth() == CV_16U) {
