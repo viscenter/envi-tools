@@ -24,7 +24,7 @@ target_link_libraries(et_roi_rng
     Boost::program_options
 )
 
-add_executable(et_extract src/ReadENVI.cpp)
+add_executable(et_extract src/ExtractENVI.cpp)
 target_link_libraries(et_extract
     ET::envitools
     Boost::filesystem

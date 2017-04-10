@@ -57,13 +57,13 @@ int main(int argc, char** argv)
     }
 
     // Parse bands arg, check if valid comma seperated list of ints
-    std::vector<std::string> bandsVec;
+    std::vector<int> bandsVec;
 
     try {
-        std::stringstream ss(str);
+        std::stringstream ss(bands);
         int i;
         while (ss >> i) {
-            bandsVec.push_back(i);
+            bandsVec.emplace_back(i);
             if (ss.peek() == ',') {
                 ss.ignore();
             }
@@ -102,7 +102,7 @@ int main(int argc, char** argv)
     auto m = envi.getBand(band);
 
     // Select file extension
-    fs::path out = outputPath / envi.getWavelength(band) + ".png";
+    fs::path out = /*outputPath */ envi.getWavelength(band) + ".png";
 
     if (m.depth() == CV_32F) {
         out.replace_extension("hdr");
