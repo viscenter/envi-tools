@@ -15,7 +15,7 @@ namespace po = boost::program_options;
 
 int main(int argc, char** argv)
 {
-    fs::path hdrPath;
+    fs::path hdrPath, outputPath;
 
     // clang-format off
     po::options_description options("Options");
@@ -23,7 +23,7 @@ int main(int argc, char** argv)
         ("help,h","Show this message")
         ("input-file,i", po::value<std::string>()->required(),
             "Path to the ENVI header file")
-        ("band,b", po::value<int>()->required(),
+        ("band,b", po::value<std::string>()->required(),
             "Band to extract")
         ("output-dir,o", po::value<std::string>()->required(),
             "Output directory");
@@ -49,6 +49,33 @@ int main(int argc, char** argv)
         return EXIT_FAILURE;
     }
 
+    // Get the bands
+    std::string bands = parsedOptions["band"].as<std::string>();
+
+    if (bands == "all") {
+        // output all bands
+    }
+
+    // Parse bands arg, check if valid comma seperated list of ints
+    std::vector<std::string> bandsVec;
+
+    try {
+        std::stringstream ss(str);
+        int i;
+        while (ss >> i) {
+            bandsVec.push_back(i);
+            if (ss.peek() == ',') {
+                ss.ignore();
+            }
+        }
+    } catch (...) {
+        std::cerr << "ERROR: Bands must be a comma separated list of ints"
+                  << std::endl;
+        return EXIT_FAILURE;
+    }
+
+    // boost::split(bandsVec, bands, boost::is_any_of(","));
+
     // Get the hdr path
     hdrPath = parsedOptions["input-file"].as<std::string>();
 
@@ -56,6 +83,9 @@ int main(int argc, char** argv)
         std::cerr << "Error: File path does not exist." << std::endl;
         return EXIT_FAILURE;
     }
+
+    // Get the output path
+    outputPath = parsedOptions["output-dir"].as<std::string>();
 
     // Get band info
     auto band = parsedOptions["band"].as<int>();
@@ -72,7 +102,8 @@ int main(int argc, char** argv)
     auto m = envi.getBand(band);
 
     // Select file extension
-    fs::path out = envi.getWavelength(band) + ".png";
+    fs::path out = outputPath / envi.getWavelength(band) + ".png";
+
     if (m.depth() == CV_32F) {
         out.replace_extension("hdr");
     } else if (m.depth() == CV_16U) {
