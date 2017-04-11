@@ -2,6 +2,9 @@
 // Created by Seth Parker on 2/7/17.
 //
 
+#include <numeric>
+
+#include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
 #include <opencv2/core.hpp>
@@ -13,10 +16,11 @@ namespace et = envitools;
 namespace fs = boost::filesystem;
 namespace po = boost::program_options;
 
+std::vector<int> OptToBandList(const std::string& opt);
+
 int main(int argc, char** argv)
 {
-    fs::path hdrPath, outputPath;
-
+    ///// Setup program options /////
     // clang-format off
     po::options_description options("Options");
     options.add_options()
@@ -29,7 +33,6 @@ int main(int argc, char** argv)
             "Output directory");
     // clang-format on
 
-    // parsedOptions will hold the value of all parsed options as a Map
     po::variables_map parsedOptions;
     po::store(
         po::command_line_parser(argc, argv).options(options).run(),
@@ -49,66 +52,73 @@ int main(int argc, char** argv)
         return EXIT_FAILURE;
     }
 
-    // Get the bands
-    std::string bands = parsedOptions["band"].as<std::string>();
-
-    if (bands == "all") {
-        // output all bands
-    }
-
-    // Parse bands arg, check if valid comma seperated list of ints
-    std::vector<int> bandsVec;
-
-    try {
-        std::stringstream ss(bands);
-        int i;
-        while (ss >> i) {
-            bandsVec.emplace_back(i);
-            if (ss.peek() == ',') {
-                ss.ignore();
-            }
-        }
-    } catch (...) {
-        std::cerr << "ERROR: Bands must be a comma separated list of ints"
-                  << std::endl;
-        return EXIT_FAILURE;
-    }
-
-    // boost::split(bandsVec, bands, boost::is_any_of(","));
-
-    // Get the hdr path
-    hdrPath = parsedOptions["input-file"].as<std::string>();
-
-    if (!(boost::filesystem::exists(hdrPath))) {
+    ///// Get important paths /////
+    fs::path enviPath, outputDir;
+    enviPath = parsedOptions["input-file"].as<std::string>();
+    if (!fs::exists(enviPath)) {
         std::cerr << "Error: File path does not exist." << std::endl;
         return EXIT_FAILURE;
     }
 
     // Get the output path
-    outputPath = parsedOptions["output-dir"].as<std::string>();
-
-    // Get band info
-    auto band = parsedOptions["band"].as<int>();
-
-    // Get args
-    // fs::path hdrPath = argv[1];
-    // int band = std::stoi(argv[2]);
-
-    // Load ENVI file and print header info
-    envitools::ENVI envi(hdrPath);
-    envi.printHeader();
-
-    // Get band from file
-    auto m = envi.getBand(band);
-
-    // Select file extension
-    fs::path out = /*outputPath */ envi.getWavelength(band) + ".png";
-
-    if (m.depth() == CV_32F) {
-        out.replace_extension("hdr");
-    } else if (m.depth() == CV_16U) {
-        out.replace_extension("tif");
+    outputDir = parsedOptions["output-dir"].as<std::string>();
+    if (!fs::is_directory(outputDir)) {
+        std::cerr << "Error: Output path is not a directory." << std::endl;
+        return EXIT_FAILURE;
     }
 
-    cv::imwrite(out.string(), m);
+    ///// Load ENVI file /////
+    envitools::ENVI envi(enviPath);
+
+    ///// Build the list of bands we're going to extract /////
+    auto bandsOpt = parsedOptions["band"].as<std::string>();
+    std::vector<int> bandsVec;
+    // All bands
+    if (bandsOpt == "all") {
+        bandsVec.resize(static_cast<size_t>(envi.bands()));
+        std::iota(bandsVec.begin(), bandsVec.end(), 0);
+    }
+    // List of bands
+    else {
+        bandsVec = OptToBandList(bandsOpt);
+    }
+
+    ///// Do the processing /////
+    for (auto& band : bandsVec) {
+        // Get band from file
+        auto m = envi.getBand(band);
+
+        // Select file extension
+        fs::path out = outputDir / (envi.getWavelength(band) + ".png");
+
+        if (m.depth() == CV_32F) {
+            out.replace_extension("hdr");
+        } else if (m.depth() == CV_16U) {
+            out.replace_extension("tif");
+        }
+
+        cv::imwrite(out.string(), m);
+    }
+}
+
+// Split a string (presumably comma separated) into a list of bands
+std::vector<int> OptToBandList(const std::string& opt)
+{
+    // Setup output
+    std::vector<int> output;
+
+    // Split by Comma
+    std::vector<std::string> splitBands;
+    boost::split(splitBands, opt, boost::is_any_of(","));
+
+    // Put in the output vector
+    for (auto& b : splitBands) {
+        try {
+            output.emplace_back(std::stoi(b));
+        } catch (std::exception& e) {
+            std::cerr << e.what() << std::endl;
+            exit(EXIT_FAILURE);
+        }
+    }
+    return output;
 }
