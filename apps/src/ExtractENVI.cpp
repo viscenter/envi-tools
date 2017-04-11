@@ -27,8 +27,8 @@ int main(int argc, char** argv)
         ("help,h","Show this message")
         ("input-file,i", po::value<std::string>()->required(),
             "Path to the ENVI header file")
-        ("band,b", po::value<std::string>()->required(),
-            "Band to extract")
+        ("band,b", po::value<std::string>()->default_value("all"),
+            "Band(s) to extract")
         ("output-dir,o", po::value<std::string>()->required(),
             "Output directory");
     // clang-format on
@@ -39,7 +39,7 @@ int main(int argc, char** argv)
         parsedOptions);
 
     // show the help message
-    if (parsedOptions.count("help") || argc < 4) {
+    if (parsedOptions.count("help") || argc < 3) {
         std::cout << options << std::endl;
         return EXIT_SUCCESS;
     }
@@ -69,7 +69,7 @@ int main(int argc, char** argv)
 
     ///// Load ENVI file /////
     envitools::ENVI envi(enviPath);
-
+    
     ///// Build the list of bands we're going to extract /////
     auto bandsOpt = parsedOptions["band"].as<std::string>();
     std::vector<int> bandsVec;
