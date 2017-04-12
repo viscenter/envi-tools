@@ -78,10 +78,23 @@ public:
      * */
     enum class Interleave { BandSequential, BandByPixel, BandByLine };
 
+    /** @brief Data access mode options
+     *
+     * Determines whether the data file stream will remain open after a call to
+     * getBand().
+     *
+     * <b>CloseOnComplete (default)</b>: The data file stream will be
+     * immediately closed.
+     *
+     * <b>KeepOpen</b>: The data file stream will remain open.
+     * */
+    enum class AccessMode { CloseOnComplete, KeepOpen };
+
     /** @name Constructors */
     ///@{
     /** @brief Load from ENVI header file */
     ENVI(const boost::filesystem::path& header)
+        : accessMode_(AccessMode::CloseOnComplete)
     {
         parse_header_(header);
         find_data_file_(header);
@@ -91,7 +104,7 @@ public:
     ENVI(
         const boost::filesystem::path& header,
         const boost::filesystem::path& data)
-        : dataPath_(data)
+        : dataPath_(data), accessMode_(AccessMode::CloseOnComplete)
     {
         parse_header_(header);
     }
@@ -107,6 +120,20 @@ public:
 
     /** @brief Get list of wavelengths */
     std::vector<std::string> getWavelengths() { return wavelengths_; }
+
+    /** @brief Set the data access mode
+     *
+     *  If set to ENVI::AccessMode::KeepOpen, the file stream will attempt to
+     *  remain open after a call to getBand(). This can slightly improve
+     *  performance when repeatedly accessing the data file.
+     *
+     *  @warning If using the KeepOpen access mode, it's good practice to call
+     *  closeFile() when access to the data file is no longer needed.
+     */
+    void setAccessMode(AccessMode m) { accessMode_ = m; }
+
+    /** @brief Close the data file stream if it's open */
+    void closeFile();
     ///@}
 
     /** @name Metadata */
@@ -166,6 +193,15 @@ private:
     /** Path to ENVI data file */
     boost::filesystem::path dataPath_;
 
+    /** File stream for repeated access */
+    std::ifstream ifs_;
+
+    /** Open the filestream if it's not already open */
+    void open_file_();
+
+    /** Current data access mode */
+    AccessMode accessMode_;
+
     /** List of parsed wavelengths */
     std::vector<std::string> wavelengths_;
 
@@ -182,10 +218,7 @@ private:
     cv::Mat get_band_(int b)
     {
         // Open the filestream
-        std::ifstream ifs{dataPath_.string(), std::ios::binary};
-        if (!ifs.is_open()) {
-            throw std::runtime_error("Could not open ENVI data file");
-        }
+        open_file_();
 
         // Setup output Mat
         cv::Mat_<T> output(lines_, samples_);
@@ -202,12 +235,12 @@ private:
                 pos = pos_of_elem_(
                     static_cast<uint64_t>(b), static_cast<uint64_t>(y),
                     static_cast<uint64_t>(x), length);
-                ifs.seekg(pos);
+                ifs_.seekg(pos);
 
                 // Read the bytes
-                ifs.read(reinterpret_cast<char*>(&value), length);
-                if (ifs.fail()) {
-                    auto msg = "Only read " + std::to_string(ifs.gcount()) +
+                ifs_.read(reinterpret_cast<char*>(&value), length);
+                if (ifs_.fail()) {
+                    auto msg = "Only read " + std::to_string(ifs_.gcount()) +
                                " bytes. Expected: " + std::to_string(length);
                     throw std::runtime_error(msg);
                 }
@@ -215,6 +248,10 @@ private:
                 // Assign to the mat
                 output.template at<T>(y, x) = value;
             }
+        }
+
+        if (accessMode_ == AccessMode::CloseOnComplete) {
+            closeFile();
         }
 
         return output;

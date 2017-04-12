@@ -27,8 +27,10 @@ int main(int argc, char** argv)
         ("help,h","Show this message")
         ("input-file,i", po::value<std::string>()->required(),
             "Path to the ENVI header file")
-        ("band,b", po::value<std::string>()->default_value("all"),
-            "Band(s) to extract")
+        ("bands,b", po::value<std::string>()->default_value("all"),
+            "Comma-separated list of band index numbers to extract "
+            "(e.g. \"0,56,27,133\"). If \"all\", program will extract all bands"
+            " to the output directory.")
         ("output-dir,o", po::value<std::string>()->required(),
             "Output directory");
     // clang-format on
@@ -71,7 +73,7 @@ int main(int argc, char** argv)
     envitools::ENVI envi(enviPath);
     
     ///// Build the list of bands we're going to extract /////
-    auto bandsOpt = parsedOptions["band"].as<std::string>();
+    auto bandsOpt = parsedOptions["bands"].as<std::string>();
     std::vector<int> bandsVec;
     // All bands
     if (bandsOpt == "all") {
@@ -84,7 +86,17 @@ int main(int argc, char** argv)
     }
 
     ///// Do the processing /////
+    // Prep the ENVI file for continuous access
+    envi.setAccessMode(et::ENVI::AccessMode::KeepOpen);
+
+    // Extract each band
     for (auto& band : bandsVec) {
+        if (band < 0 || band >= envi.bands()) {
+            std::cerr << "Error: Band (" << band << ") not in range. Skipping."
+                      << std::endl;
+            continue;
+        }
+
         // Get band from file
         auto m = envi.getBand(band);
 
@@ -99,6 +111,9 @@ int main(int argc, char** argv)
 
         cv::imwrite(out.string(), m);
     }
+
+    // Make sure the file gets closed
+    envi.closeFile();
 }
 
 // Split a string (presumably comma separated) into a list of bands
