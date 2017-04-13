@@ -26,9 +26,11 @@ target_link_libraries(et_roi_rng
     Boost::program_options
 )
 
-add_executable(et_ReadENVI src/ReadENVI.cpp)
-target_link_libraries(et_ReadENVI
+add_executable(et_extract src/ExtractENVI.cpp)
+target_link_libraries(et_extract
     ET::envitools
+    Boost::filesystem
+    Boost::program_options
     opencv_core
     opencv_imgcodecs
 )

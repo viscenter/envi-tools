@@ -1,5 +1,6 @@
 #include "envitools/ENVI.hpp"
 
+#include <exception>
 #include <regex>
 
 #include <boost/algorithm/string.hpp>
@@ -114,9 +115,33 @@ void ENVI::find_data_file_(const boost::filesystem::path& header)
     throw std::runtime_error("Data file not found. Please specify manually");
 }
 
+// Don't try to reopen the file (for repeated access)
+void ENVI::open_file_()
+{
+    if (!ifs_.is_open()) {
+        ifs_.open(dataPath_.string(), std::ios::binary);
+    }
+
+    if (!ifs_.good()) {
+        throw std::runtime_error("Could not open ENVI data file");
+    }
+}
+
+// Close the data file if it's open
+void ENVI::closeFile()
+{
+    if (ifs_.is_open()) {
+        ifs_.close();
+    }
+}
+
 // Get a specific band from the ENVI file
 cv::Mat ENVI::getBand(int b)
 {
+    if (b >= bands_) {
+        throw std::out_of_range("Band not in range: " + std::to_string(b));
+    }
+
     switch (type_) {
         case DataType::Unsigned8:
             return get_band_<uint8_t>(b);
