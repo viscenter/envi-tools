@@ -4,6 +4,11 @@
 */
 
 /**
+ @defgroup io ENVI Tools IO Library
+ @brief Reading and writing data that other libraries don't handle.
+*/
+
+/**
  @defgroup ExampleDocs Documentation Examples
  @brief Files that demonstrate how code should be formatted for Doxygen.
 */

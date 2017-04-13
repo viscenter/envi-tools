@@ -5,6 +5,7 @@ set(target "${module}")
 set(srcs
     src/ENVI.cpp
     src/CSVIO.cpp
+    src/TIFFIO.cpp
     src/ContrastMetrics.cpp
 )
 

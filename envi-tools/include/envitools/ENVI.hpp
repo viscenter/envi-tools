@@ -24,6 +24,7 @@ namespace envitools
   Header Files</a>
 
   @ingroup envitools
+  @ingroup io
 */
 class ENVI
 {
