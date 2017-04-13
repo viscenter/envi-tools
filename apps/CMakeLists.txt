@@ -34,3 +34,11 @@ target_link_libraries(et_extract
     opencv_core
     opencv_imgcodecs
 )
+
+add_executable(et_rgb src/MakeRGB.cpp)
+target_link_libraries(et_rgb
+    Boost::filesystem
+    Boost::program_options
+    opencv_core
+    opencv_imgcodecs
+)
