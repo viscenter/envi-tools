@@ -78,20 +78,21 @@ int main(int argc, char* argv[])
     cv::Mat g = cv::imread(imgPathGreen.string(), -1);
     cv::Mat b = cv::imread(imgPathBlue.string(), -1);
 
+    // Tone map for contrast
+    auto gamma = parsedOptions["gamma"].as<float>();
+    r = et::ToneMap(r, gamma);
+    g = et::ToneMap(g, gamma);
+    b = et::ToneMap(b, gamma);
+
+    // Merge images
     std::vector<cv::Mat> imgArr;
+    cv::Mat outImage;
 
     imgArr.push_back(b);
     imgArr.push_back(g);
     imgArr.push_back(r);
 
-    cv::Mat outImage;
-
-    // Merge images
     cv::merge(imgArr, outImage);
-
-    // Tone map for contrast
-    auto gamma = parsedOptions["gamma"].as<float>();
-    outImage = et::ToneMap(outImage, gamma);
 
     // Write new image to output path
     cv::imwrite(outputPath.string(), outImage);
