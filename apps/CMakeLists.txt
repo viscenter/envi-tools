@@ -9,8 +9,8 @@ target_link_libraries(et_contrast
     opencv_imgproc
 )
 
-add_executable(et_convert src/Convert.cpp)
-target_link_libraries(et_convert
+add_executable(et_convert_dir src/ConvertDir.cpp)
+target_link_libraries(et_convert_dir
     ET::envitools
     Boost::filesystem
     Boost::program_options

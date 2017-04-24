@@ -76,7 +76,7 @@ int main(int argc, char* argv[])
 
     if (r.depth() != g.depth() || r.depth() != b.depth() ||
         g.depth() != b.depth()) {
-        std::cerr << "ERROR: Input image types do not match" << std::endl;
+        std::cerr << "ERROR: Input image depths do not match" << std::endl;
         return EXIT_FAILURE;
     }
 
