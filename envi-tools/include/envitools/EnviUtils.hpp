@@ -23,11 +23,23 @@ static std::string ParseWavelength(boost::filesystem::path imagePath)
 
 static cv::Mat ToneMap(const cv::Mat& m, float gamma = 1.0f)
 {
+    // Make a working copy
     auto tmp = m.clone();
-    cv::cvtColor(tmp, tmp, CV_GRAY2BGR);
+
+    // Tone map requires 3-channel images
+    if (m.channels() == 1) {
+        cv::cvtColor(tmp, tmp, CV_GRAY2BGR);
+    }
+
+    // Tonemap
     auto tonemap = cv::createTonemap(gamma);
     tonemap->process(tmp, tmp);
-    cv::cvtColor(tmp, tmp, CV_BGR2GRAY);
+
+    // Convert back to gray if it was gray
+    if (m.channels() == 1) {
+        cv::cvtColor(tmp, tmp, CV_BGR2GRAY);
+    }
+
     return tmp;
 }
 

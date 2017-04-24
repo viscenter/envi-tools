@@ -74,7 +74,8 @@ int main(int argc, char* argv[])
         return EXIT_FAILURE;
     }
 
-    if (r.type() != g.type() || r.type() != b.type() || g.type() != b.type()) {
+    if (r.depth() != g.depth() || r.depth() != b.depth() ||
+        g.depth() != b.depth()) {
         std::cerr << "ERROR: Input image types do not match" << std::endl;
         return EXIT_FAILURE;
     }
@@ -82,6 +83,11 @@ int main(int argc, char* argv[])
     // Merge images
     cv::Mat outImage;
     cv::merge(std::vector<cv::Mat>{b, g, r}, outImage);
+
+    // Replace extension if floating point
+    if (outImage.depth() == CV_32F) {
+        outputPath.replace_extension("hdr");
+    }
 
     // Write output
     cv::imwrite(outputPath.string(), outImage);
