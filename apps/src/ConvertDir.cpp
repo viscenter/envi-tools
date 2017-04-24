@@ -11,6 +11,7 @@ namespace fs = boost::filesystem;
 namespace po = boost::program_options;
 namespace et = envitools;
 
+constexpr static float DEFAULT_GAMMA = 2.2f;
 constexpr static uint8_t MAX_INTENSITY_8BPC = std::numeric_limits<uint8_t>::max();
 constexpr static uint16_t MAX_INTENSITY_16BPC =
     std::numeric_limits<uint16_t>::max();
@@ -35,7 +36,7 @@ int main(int argc, char* argv[])
             "Output bit depth:\n"
             " 8  = 8bpc (unsigned)\n"
             " 16 = 16bpc (unsigned)")
-        ("gamma", po::value<float>()->default_value(2.2f),
+        ("gamma", po::value<float>()->default_value(DEFAULT_GAMMA),
             "Gamma for floating point image tone mapping");
     // clang-format on
 
@@ -111,11 +112,11 @@ int main(int argc, char* argv[])
         switch (depth) {
             case BitDepth::Unsigned8:
                 image *= MAX_INTENSITY_8BPC;
-                image.convertTo(image, CV_8UC1);
+                image.convertTo(image, CV_8UC(image.channels()));
                 break;
             case BitDepth::Unsigned16:
                 image *= MAX_INTENSITY_16BPC;
-                image.convertTo(image, CV_16UC1);
+                image.convertTo(image, CV_16UC(image.channels()));
                 break;
         }
 
