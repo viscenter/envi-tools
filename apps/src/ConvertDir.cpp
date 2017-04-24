@@ -92,7 +92,13 @@ int main(int argc, char* argv[])
         // Load the image
         image = cv::imread(path.string(), -1);
         if (!image.data) {
-            std::cout << "Could not open or find the image" << std::endl;
+            std::cout << "Could not open or find the image: ";
+            std::cout << path.string() << std::endl;
+            continue;
+        }
+
+        if (image.depth() != CV_32F) {
+            std::cout << "Input image is not floating point: ";
             std::cout << path.string() << std::endl;
             continue;
         }
