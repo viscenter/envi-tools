@@ -68,8 +68,8 @@ int main(int argc, char* argv[])
     }
 
     // Get the output options
-    outputPath = parsedOptions["output-file"].as<std::string>();
-    auto depth = static_cast<BitDepth>(parsedOptions["bit-depth"].as<int>());
+    outputPath = parsedOptions["output-dir"].as<std::string>();
+    auto depth = static_cast<BitDepth>(parsedOptions["bpc"].as<int>());
 
     ///// Collect the tif files /////
     imgDir = parsedOptions["input-dir"].as<std::string>();

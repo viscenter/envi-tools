@@ -11,6 +11,7 @@
 #include <opencv2/imgcodecs.hpp>
 
 #include "envitools/ENVI.hpp"
+#include "envitools/TIFFIO.hpp"
 
 namespace et = envitools;
 namespace fs = boost::filesystem;
@@ -103,13 +104,15 @@ int main(int argc, char** argv)
         // Select file extension
         fs::path out = outputDir / (envi.getWavelength(band) + ".png");
 
-        if (m.depth() == CV_32F) {
-            out.replace_extension("hdr");
-        } else if (m.depth() == CV_16U) {
+        if (m.depth() == CV_16U || m.depth() == CV_32F || m.depth() == CV_64F) {
             out.replace_extension("tif");
         }
 
-        cv::imwrite(out.string(), m);
+        if (m.depth() == CV_32F || m.depth() == CV_64F) {
+            et::TIFFIO::WriteTIFF(out, m);
+        } else {
+            cv::imwrite(out.string(), m);
+        }
     }
 
     // Make sure the file gets closed
