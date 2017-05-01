@@ -11,7 +11,9 @@ namespace fs = boost::filesystem;
 namespace po = boost::program_options;
 namespace et = envitools;
 
-constexpr static uint8_t MAX_INTENSITY_8BPC = std::numeric_limits<uint8_t>::max();
+constexpr static float DEFAULT_GAMMA = 2.2f;
+constexpr static uint8_t MAX_INTENSITY_8BPC =
+    std::numeric_limits<uint8_t>::max();
 constexpr static uint16_t MAX_INTENSITY_16BPC =
     std::numeric_limits<uint16_t>::max();
 
@@ -20,22 +22,21 @@ enum class BitDepth { Unsigned8 = 8, Unsigned16 = 16 };
 int main(int argc, char* argv[])
 {
     ///// Parse the cmd line /////
-    fs::path imgDir, outputPath;
-    std::cout.width(10);
+    fs::path imgPath, outputPath;
 
     // clang-format off
     po::options_description options("Options");
     options.add_options()
         ("help,h","Show this message")
-        ("input-dir,i",po::value<std::string>()->required(),
-            "Input directory")
-        ("output-dir,o", po::value<std::string>()->required(),
-            "Output directory")
+        ("input-path,i",po::value<std::string>()->required(),
+            "Input image file")
+        ("output-path,o", po::value<std::string>()->required(),
+            "Output image file")
         ("bpc,b",po::value<int>()->default_value(16),
             "Output bit depth:\n"
             " 8  = 8bpc (unsigned)\n"
             " 16 = 16bpc (unsigned)")
-        ("gamma", po::value<float>()->default_value(2.2f),
+        ("gamma", po::value<float>()->default_value(DEFAULT_GAMMA),
             "Gamma for floating point image tone mapping");
     // clang-format on
 
@@ -47,14 +48,6 @@ int main(int argc, char* argv[])
 
     // show the help message
     if (parsedOptions.count("help") || argc < 3) {
-        std::cout << argv[0] << std::endl;
-        std::cout.fill('-');
-        std::cout.width(20);
-        std::cout << "\n";
-        std::cout << "A utility for converting a directory of 32bpc, "
-                     "floating-point TIFFs into" << std::endl;
-        std::cout << "8 or 16bpc TIFFs." << std::endl;
-        std::cout << "\n";
         std::cout << options << std::endl;
         return EXIT_SUCCESS;
     }
@@ -67,55 +60,46 @@ int main(int argc, char* argv[])
         return EXIT_FAILURE;
     }
 
-    // Get the output options
-    outputPath = parsedOptions["output-dir"].as<std::string>();
-    auto depth = static_cast<BitDepth>(parsedOptions["bpc"].as<int>());
-
-    ///// Collect the tif files /////
-    imgDir = parsedOptions["input-dir"].as<std::string>();
-    auto imgPaths = et::FindByExtension(imgDir, ".tif");
-    if (imgPaths.empty()) {
-        std::cerr << "Error opening/parsing image directory. No files found."
-                  << std::endl;
+    // Parse the cmd line
+    imgPath = parsedOptions["input-path"].as<std::string>();
+    if (!fs::exists(imgPath)) {
+        std::cerr << "ERROR: Input file does not exist" << std::endl;
         return EXIT_FAILURE;
     }
 
-    ///// Convert /////
-    cv::Mat image;
-    std::cout << "Converting to " << static_cast<int>(depth) << " bpc..."
-              << std::endl;
-    for (auto path : imgPaths) {
-        // Get wavelength for key
-        std::string id = path.stem().string();
-        std::cout << "Image: " << id << "\r" << std::flush;
+    outputPath = parsedOptions["output-path"].as<std::string>();
+    auto depth = static_cast<BitDepth>(parsedOptions["bpc"].as<int>());
 
-        // Load the image
-        image = cv::imread(path.string(), -1);
-        if (!image.data) {
-            std::cout << "Could not open or find the image" << std::endl;
-            std::cout << path.string() << std::endl;
-            continue;
-        }
+    // Open the image
+    auto image = cv::imread(imgPath.string(), -1);
 
-        // Tone map for contrast
-        auto gamma = parsedOptions["gamma"].as<float>();
-        image = et::ToneMap(image, gamma);
-
-        // Scale to output bit depth
-        switch (depth) {
-            case BitDepth::Unsigned8:
-                image *= MAX_INTENSITY_8BPC;
-                image.convertTo(image, CV_8UC1);
-                break;
-            case BitDepth::Unsigned16:
-                image *= MAX_INTENSITY_16BPC;
-                image.convertTo(image, CV_16UC1);
-                break;
-        }
-
-        // Save the output image
-        fs::path outpath = outputPath / (id + ".tif");
-        cv::imwrite(outpath.string(), image);
+    // File checks
+    if (!image.data) {
+        std::cerr << "ERROR: Failed to open input image" << std::endl;
+        return EXIT_FAILURE;
     }
-    std::cout << std::endl;
+
+    if (image.depth() != CV_32F) {
+        std::cerr << "ERROR: Input image is not floating point" << std::endl;
+        return EXIT_FAILURE;
+    }
+
+    // Tone map for contrast
+    auto gamma = parsedOptions["gamma"].as<float>();
+    image = et::ToneMap(image, gamma);
+
+    // Scale to output bit depth
+    switch (depth) {
+        case BitDepth::Unsigned8:
+            image *= MAX_INTENSITY_8BPC;
+            image.convertTo(image, CV_8UC(image.channels()));
+            break;
+        case BitDepth::Unsigned16:
+            image *= MAX_INTENSITY_16BPC;
+            image.convertTo(image, CV_16UC(image.channels()));
+            break;
+    }
+
+    // Save the output image
+    cv::imwrite(outputPath.string(), image);
 }
