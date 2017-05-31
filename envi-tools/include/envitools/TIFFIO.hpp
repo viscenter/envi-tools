@@ -20,8 +20,8 @@ namespace TIFFIO
  * @brief Write a TIFF image to file
  *
  * Supports writing floating point TIFFs, in addition to 8 & 16 bit integral
- * types. Currently only supports single-channel images. Unless you need to
- * write a floating point image, using cv::imwrite() is a better option.
+ * types. Currently only supports single and three-channel images. Unless you
+ * need to write a floating point image, using cv::imwrite() is a better option.
  */
 void WriteTIFF(const boost::filesystem::path& path, const cv::Mat& img);
 }

@@ -4,6 +4,9 @@
 #include <opencv2/core.hpp>
 #include <opencv2/imgcodecs.hpp>
 
+#include "envitools/TIFFIO.hpp"
+
+namespace et = envitools;
 namespace fs = boost::filesystem;
 namespace po = boost::program_options;
 
@@ -83,13 +86,12 @@ int main(int argc, char* argv[])
     cv::Mat outImage;
     cv::merge(std::vector<cv::Mat>{b, g, r}, outImage);
 
-    // Replace extension if floating point
-    if (outImage.depth() == CV_32F) {
-        outputPath.replace_extension("hdr");
-    }
-
     // Write output
-    cv::imwrite(outputPath.string(), outImage);
+    if (outImage.depth() == CV_32F || outImage.depth() == CV_64F) {
+        et::TIFFIO::WriteTIFF(outputPath, outImage);
+    } else {
+        cv::imwrite(outputPath.string(), outImage);
+    }
 
     return EXIT_SUCCESS;
 }

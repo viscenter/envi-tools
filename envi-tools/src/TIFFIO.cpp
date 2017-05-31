@@ -1,6 +1,7 @@
 #include "envitools/TIFFIO.hpp"
 
 #include <boost/algorithm/string.hpp>
+#include <opencv2/imgproc.hpp>
 
 // Wrapping in a namespace to avoid define collisions
 namespace lt
@@ -16,8 +17,8 @@ namespace fs = boost::filesystem;
 void tio::WriteTIFF(const boost::filesystem::path& path, const cv::Mat& img)
 {
     // Safety checks
-    if (img.channels() != 1) {
-        throw std::runtime_error("Multichannel images not supported");
+    if (img.channels() != 1 && img.channels() != 3) {
+        throw std::runtime_error("Unsupported number of channels");
     }
 
     auto ext = path.extension().string();
@@ -99,9 +100,17 @@ void tio::WriteTIFF(const boost::filesystem::path& path, const cv::Mat& img)
     auto bufferSize = static_cast<size_t>(lt::TIFFScanlineSize(out));
     std::vector<char> buffer(bufferSize + 32);
 
+    // Get working copy, with converted channels if it's 3 channel
+    cv::Mat imgCopy;
+    if (img.channels() == 3) {
+        cv::cvtColor(img, imgCopy, cv::COLOR_BGR2RGB);
+    } else {
+        imgCopy = img;
+    }
+
     // For each row
     for (unsigned row = 0; row < height; row++) {
-        memcpy(&buffer[0], img.ptr(row), bufferSize);
+        memcpy(&buffer[0], imgCopy.ptr(row), bufferSize);
         auto result = lt::TIFFWriteScanline(out, &buffer[0], row, 0);
         if (result == -1) {
             lt::TIFFClose(out);

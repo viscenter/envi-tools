@@ -47,6 +47,7 @@ target_link_libraries(et_extract
 
 add_executable(et_rgb src/MakeRGB.cpp)
 target_link_libraries(et_rgb
+    ET::envitools
     Boost::filesystem
     Boost::program_options
     opencv_core
