@@ -24,8 +24,10 @@ add_custom_target(
 )
 
 # Install command
+if(INSTALL_DOC)
 install(
     DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/html
     DESTINATION doc
     COMPONENT Documentation
 )
+endif()

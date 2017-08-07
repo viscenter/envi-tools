@@ -35,11 +35,11 @@ install(
 )
 
 # Install resources (e.g. README, LICENSE, etc.)
-install(
-  FILES "LICENSE"
-  DESTINATION "${share_install_dir}"
-  COMPONENT "Resources"
-)
+#install(
+#  FILES "LICENSE"
+#  DESTINATION "${share_install_dir}"
+#  COMPONENT "Resources"
+#)
 
 # What components to install
 set(install_components "")

@@ -20,7 +20,7 @@ option(BUILD_DOC      "Compile documentation"    on)
 
 # Choose what to install
 option(INSTALL_APPS      "Install core programs"    on)
-option(INSTALL_DOC       "Install documentation"    on)
+option(INSTALL_DOC       "Install documentation"    off)
 
 # Look for external dependencies.
 include(FindDependencies)

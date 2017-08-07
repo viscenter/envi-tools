@@ -53,3 +53,18 @@ target_link_libraries(et_rgb
     opencv_core
     opencv_imgcodecs
 )
+
+# Install targets
+if(INSTALL_APPS)
+install(
+    TARGETS
+        et_contrast
+        et_convert
+        et_convert_dir
+        et_roi_rng
+        et_extract
+        et_rgb
+    RUNTIME DESTINATION bin
+    COMPONENT Programs
+)
+endif()
