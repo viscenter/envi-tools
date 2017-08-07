@@ -14,7 +14,7 @@ namespace fs = boost::filesystem;
 
 // Write a TIFF to a file. This implementation heavily borrows from how OpenCV's
 // TIFFEncoder writes to the TIFF
-void tio::WriteTIFF(const boost::filesystem::path& path, const cv::Mat& img)
+void tio::WriteTIFF(const fs::path& path, const cv::Mat& img)
 {
     // Safety checks
     if (img.channels() != 1 && img.channels() != 3) {
@@ -23,7 +23,7 @@ void tio::WriteTIFF(const boost::filesystem::path& path, const cv::Mat& img)
 
     auto ext = path.extension().string();
     boost::to_upper(ext);
-    if (ext != ".TIF" && path.extension() != ".TIFF") {
+    if (ext != ".TIF" && ext != ".TIFF") {
         throw std::runtime_error("Invalid file extension " + ext);
     }
 
