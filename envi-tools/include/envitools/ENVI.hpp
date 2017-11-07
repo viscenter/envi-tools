@@ -91,23 +91,38 @@ public:
      * */
     enum class AccessMode { CloseOnComplete, KeepOpen };
 
+    /** @brief Shared pointer type */
+    using Pointer = std::shared_ptr<ENVI>;
+
     /** @name Constructors */
     ///@{
     /** @brief Load from ENVI header file */
-    ENVI(const boost::filesystem::path& header)
-        : accessMode_(AccessMode::CloseOnComplete)
+    explicit ENVI(const boost::filesystem::path& header)
     {
         parse_header_(header);
         find_data_file_(header);
     }
 
     /** @brief Load from ENVI header and data files */
-    ENVI(
-        const boost::filesystem::path& header,
-        const boost::filesystem::path& data)
-        : dataPath_(data), accessMode_(AccessMode::CloseOnComplete)
+    explicit ENVI(
+        const boost::filesystem::path& header, boost::filesystem::path data)
+        : dataPath_{std::move(data)}
     {
         parse_header_(header);
+    }
+
+    /** @copybrief explicit ENVI(const boost::filesystem::path& header) */
+    static Pointer New(const boost::filesystem::path& header)
+    {
+        return std::make_shared<ENVI>(header);
+    }
+
+    /** @copybrief explicit ENVI(const boost::filesystem::path&,
+     * boost::filesystem::path) */
+    static Pointer New(
+        const boost::filesystem::path& header, boost::filesystem::path data)
+    {
+        return std::make_shared<ENVI>(header, data);
     }
     ///@}
 
@@ -179,17 +194,17 @@ private:
     uint64_t pos_of_elem_(uint64_t band, uint64_t y, uint64_t x, uint64_t size);
 
     /** ENVI file's fundamental datatype */
-    DataType type_;
+    DataType type_{DataType::Float32};
     /** ENVI file's endianess */
-    Endianness endian_;
+    Endianness endian_{Endianness::Big};
     /** ENVI file's band ordering */
-    Interleave interleave_;
+    Interleave interleave_{Interleave::BandSequential};
     /** Number of samples for each band (aka image width) */
-    int samples_;
+    int samples_{0};
     /** Number of lines for each band (aka image height) */
-    int lines_;
+    int lines_{0};
     /** Number of bands in ENVI file */
-    int bands_;
+    int bands_{0};
 
     /** Path to ENVI data file */
     boost::filesystem::path dataPath_;
@@ -201,7 +216,7 @@ private:
     void open_file_();
 
     /** Current data access mode */
-    AccessMode accessMode_;
+    AccessMode accessMode_{AccessMode::CloseOnComplete};
 
     /** List of parsed wavelengths */
     std::vector<std::string> wavelengths_;

@@ -84,6 +84,7 @@ int main(int argc, char** argv)
     // List of bands
     else {
         bandsVec = OptToBandList(bandsOpt);
+        std::sort(bandsVec.begin(), bandsVec.end());
     }
 
     ///// Do the processing /////

@@ -54,6 +54,11 @@ target_link_libraries(et_rgb
     opencv_imgcodecs
 )
 
+add_executable(et_envi_info src/ENVIInfo.cpp)
+target_link_libraries(et_envi_info
+    ET::envitools
+)
+
 # Install targets
 if(INSTALL_APPS)
 install(
