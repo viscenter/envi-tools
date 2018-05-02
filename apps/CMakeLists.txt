@@ -59,6 +59,13 @@ target_link_libraries(et_envi_info
     ET::envitools
 )
 
+add_executable(et_tiff_convert src/TIFFConvert.cpp)
+target_link_libraries(et_tiff_convert
+    ET::envitools
+    opencv_core
+    opencv_imgcodecs
+)
+
 # Install targets
 if(INSTALL_APPS)
 install(

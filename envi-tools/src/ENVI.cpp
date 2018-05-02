@@ -162,9 +162,9 @@ cv::Mat ENVI::getBand(int b)
         case DataType::Unsigned32:
             return get_band_<uint32_t>(b);
         case DataType::Signed64:
-            return get_band_<int64_t>(b);
+            throw std::runtime_error("64-bit Integer ENVI files are unsupported");
         case DataType::Unsigned64:
-            return get_band_<uint64_t>(b);
+            throw std::runtime_error("64-bit Integer ENVI files are unsupported");
     }
 }
 
