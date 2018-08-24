@@ -21,6 +21,7 @@ int main(int argc, char* argv[])
     } catch (const std::exception& e) {
         std::cerr << "Cannot open file as ENVI: ";
         std::cerr << e.what() << std::endl;
+        return EXIT_FAILURE;
     }
 
     std::cout << "DataType: " << static_cast<int>(envi->datatype())
