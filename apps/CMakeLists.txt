@@ -57,6 +57,8 @@ target_link_libraries(et_rgb
 add_executable(et_envi_info src/ENVIInfo.cpp)
 target_link_libraries(et_envi_info
     ET::envitools
+    Boost::filesystem
+    Boost::program_options
 )
 
 add_executable(et_tiff_convert src/TIFFConvert.cpp)

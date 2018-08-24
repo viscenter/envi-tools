@@ -1,5 +1,6 @@
 #include "envitools/ENVI.hpp"
 
+#include <array>
 #include <exception>
 #include <regex>
 
@@ -7,6 +8,9 @@
 
 namespace fs = boost::filesystem;
 using namespace envitools;
+
+using ExtList = std::array<std::string, 2>;
+static const ExtList DataExts{"", "raw"};
 
 // Read an ENVI header file
 void ENVI::parse_header_(const fs::path& header)
@@ -25,7 +29,7 @@ void ENVI::parse_header_(const fs::path& header)
     std::regex samples("^samples");
     std::regex lines("^lines");
     std::regex bands("^bands");
-    std::regex bandIDs("^wavelength");
+    std::regex bandIDs("^wavelength", std::regex::icase);
 
     // Start parsing
     std::string line;
@@ -106,10 +110,12 @@ void ENVI::find_data_file_(const boost::filesystem::path& header)
 {
     // File should have same name and no extension
     fs::path tmp = header;
-    tmp.replace_extension("");
-    if (fs::exists(tmp)) {
-        dataPath_ = tmp;
-        return;
+    for (const auto& e : DataExts) {
+        tmp.replace_extension(e);
+        if (fs::exists(tmp)) {
+            dataPath_ = tmp;
+            return;
+        }
     }
 
     throw std::runtime_error("Data file not found. Please specify manually");
