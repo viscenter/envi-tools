@@ -11,6 +11,7 @@
 #include <opencv2/imgcodecs.hpp>
 
 #include "envitools/ENVI.hpp"
+#include "envitools/FlatfieldCorrection.hpp"
 #include "envitools/TIFFIO.hpp"
 
 namespace et = envitools;
@@ -33,23 +34,26 @@ int main(int argc, char** argv)
             "(e.g. \"0,56,27,133\"). If \"all\", program will extract all bands"
             " to the output directory.")
         ("output-dir,o", po::value<std::string>()->required(),
-            "Output directory");
+            "Output directory")
+        ("dark-field", po::value<std::string>(),
+            "Path to the Dark Field ENVI header file")
+        ("white-field", po::value<std::string>(),
+            "Path to the White Field ENVI header file");
     // clang-format on
 
-    po::variables_map parsedOptions;
+    po::variables_map parsed;
     po::store(
-        po::command_line_parser(argc, argv).options(options).run(),
-        parsedOptions);
+        po::command_line_parser(argc, argv).options(options).run(), parsed);
 
     // show the help message
-    if (parsedOptions.count("help") || argc < 3) {
+    if (parsed.count("help") || argc < 3) {
         std::cout << options << std::endl;
         return EXIT_SUCCESS;
     }
 
     // warn of missing options
     try {
-        po::notify(parsedOptions);
+        po::notify(parsed);
     } catch (po::error& e) {
         std::cerr << "Error: " << e.what() << std::endl;
         return EXIT_FAILURE;
@@ -57,28 +61,36 @@ int main(int argc, char** argv)
 
     ///// Get important paths /////
     fs::path enviPath, outputDir;
-    enviPath = parsedOptions["input-file"].as<std::string>();
+    enviPath = parsed["input-file"].as<std::string>();
     if (!fs::exists(enviPath)) {
         std::cerr << "Error: File path does not exist." << std::endl;
         return EXIT_FAILURE;
     }
 
     // Get the output path
-    outputDir = parsedOptions["output-dir"].as<std::string>();
+    outputDir = parsed["output-dir"].as<std::string>();
     if (!fs::is_directory(outputDir)) {
         std::cerr << "Error: Output path is not a directory." << std::endl;
         return EXIT_FAILURE;
     }
 
     ///// Load ENVI file /////
-    envitools::ENVI envi(enviPath);
-    
+    auto envi = et::ENVI::New(enviPath);
+    et::ENVI::Pointer dark;
+    et::ENVI::Pointer white;
+    bool flatfield =
+        parsed.count("dark-field") > 0 && parsed.count("white-field") > 0;
+    if (flatfield) {
+        dark = et::ENVI::New(parsed["dark-field"].as<std::string>());
+        white = et::ENVI::New(parsed["white-field"].as<std::string>());
+    }
+
     ///// Build the list of bands we're going to extract /////
-    auto bandsOpt = parsedOptions["bands"].as<std::string>();
+    auto bandsOpt = parsed["bands"].as<std::string>();
     std::vector<int> bandsVec;
     // All bands
     if (bandsOpt == "all") {
-        bandsVec.resize(static_cast<size_t>(envi.bands()));
+        bandsVec.resize(static_cast<size_t>(envi->bands()));
         std::iota(bandsVec.begin(), bandsVec.end(), 0);
     }
     // List of bands
@@ -89,21 +101,30 @@ int main(int argc, char** argv)
 
     ///// Do the processing /////
     // Prep the ENVI file for continuous access
-    envi.setAccessMode(et::ENVI::AccessMode::KeepOpen);
+    envi->setAccessMode(et::ENVI::AccessMode::KeepOpen);
+    if (flatfield) {
+        dark->setAccessMode(et::ENVI::AccessMode::KeepOpen);
+        white->setAccessMode(et::ENVI::AccessMode::KeepOpen);
+    }
 
     // Extract each band
     for (auto& band : bandsVec) {
-        if (band < 0 || band >= envi.bands()) {
+        if (band < 0 || band >= envi->bands()) {
             std::cerr << "Error: Band (" << band << ") not in range. Skipping."
                       << std::endl;
             continue;
         }
 
         // Get band from file
-        auto m = envi.getBand(band);
+        auto m = envi->getBand(band);
+        if (flatfield) {
+            auto d = dark->getBand(band);
+            auto w = white->getBand(band);
+            m = et::FlatfieldCorrection(m, d, w);
+        }
 
         // Select file extension
-        fs::path out = outputDir / (envi.getWavelength(band) + ".png");
+        fs::path out = outputDir / (envi->getWavelength(band) + ".png");
 
         if (m.depth() == CV_16U || m.depth() == CV_32F || m.depth() == CV_64F) {
             out.replace_extension("tif");
@@ -117,7 +138,7 @@ int main(int argc, char** argv)
     }
 
     // Make sure the file gets closed
-    envi.closeFile();
+    envi->closeFile();
 }
 
 // Split a string (presumably comma separated) into a list of bands
