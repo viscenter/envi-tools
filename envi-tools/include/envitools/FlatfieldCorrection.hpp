@@ -10,8 +10,10 @@ namespace envitools
 static cv::Mat FlatfieldCorrection(
     const cv::Mat& input, const cv::Mat& dark, const cv::Mat& flat)
 {
-    if(input.depth() != dark.depth() || input.depth() != flat.depth()) {
-        throw std::runtime_error("Input image does not have same bit depth as dark/flat-field image.");
+    if (input.depth() != dark.depth() || input.depth() != flat.depth()) {
+        throw std::runtime_error(
+            "Input image does not have same bit depth as dark/flat-field "
+            "image.");
     }
 
     // Do floating point math
