@@ -37,8 +37,8 @@ int main(int argc, char** argv)
             "Output directory")
         ("dark-field", po::value<std::string>(),
             "Path to the Dark Field ENVI header file")
-        ("white-field", po::value<std::string>(),
-            "Path to the White Field ENVI header file");
+        ("flat-field", po::value<std::string>(),
+            "Path to the Flat/White Field ENVI header file");
     // clang-format on
 
     po::variables_map parsed;
@@ -76,13 +76,12 @@ int main(int argc, char** argv)
 
     ///// Load ENVI file /////
     auto envi = et::ENVI::New(enviPath);
-    et::ENVI::Pointer dark;
-    et::ENVI::Pointer white;
-    bool flatfield =
-        parsed.count("dark-field") > 0 && parsed.count("white-field") > 0;
-    if (flatfield) {
+    et::ENVI::Pointer dark, flat;
+    bool doFlatfield =
+        parsed.count("dark-field") > 0 && parsed.count("flat-field") > 0;
+    if (doFlatfield) {
         dark = et::ENVI::New(parsed["dark-field"].as<std::string>());
-        white = et::ENVI::New(parsed["white-field"].as<std::string>());
+        flat = et::ENVI::New(parsed["flat-field"].as<std::string>());
     }
 
     ///// Build the list of bands we're going to extract /////
@@ -102,9 +101,9 @@ int main(int argc, char** argv)
     ///// Do the processing /////
     // Prep the ENVI file for continuous access
     envi->setAccessMode(et::ENVI::AccessMode::KeepOpen);
-    if (flatfield) {
+    if (doFlatfield) {
         dark->setAccessMode(et::ENVI::AccessMode::KeepOpen);
-        white->setAccessMode(et::ENVI::AccessMode::KeepOpen);
+        flat->setAccessMode(et::ENVI::AccessMode::KeepOpen);
     }
 
     // Extract each band
@@ -117,9 +116,9 @@ int main(int argc, char** argv)
 
         // Get band from file
         auto m = envi->getBand(band);
-        if (flatfield) {
+        if (doFlatfield) {
             auto d = dark->getBand(band);
-            auto w = white->getBand(band);
+            auto w = flat->getBand(band);
             m = et::FlatfieldCorrection(m, d, w);
         }
 
