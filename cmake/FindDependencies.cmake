@@ -12,6 +12,9 @@ find_package(Boost REQUIRED COMPONENTS filesystem program_options)
 ### OpenCV ###
 find_package(OpenCV 3 REQUIRED)
 
+### LibTIFF ###
+find_package(TIFF REQUIRED)
+
 ############
 # Optional #
 ############

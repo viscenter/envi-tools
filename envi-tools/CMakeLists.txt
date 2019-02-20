@@ -21,6 +21,8 @@ target_link_libraries(${target}
         Boost::filesystem
         opencv_core
         opencv_photo
+    PRIVATE
+        TIFF::TIFF
 )
 set_target_properties(${target} PROPERTIES
     VERSION "${PROJECT_VERSION}"

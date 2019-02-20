@@ -1,0 +1,29 @@
+compiler:
+  - clang
+  - gcc
+
+matrix:
+  include:
+    - os: linux
+      dist: xenial
+    - os: osx
+
+addons:
+  apt:
+    sources:
+      - ppa:timsc/opencv-3.4
+    packages:
+      - libboost-all-dev
+      - libopencv-dev
+  homebrew:
+    packages:
+      - boost
+      - cmake
+      - opencv
+
+script:
+  - mkdir -p build/
+  - cd build/
+  - cmake .. && make -j
+
+language: cpp
