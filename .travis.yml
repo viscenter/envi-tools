@@ -1,11 +1,12 @@
 language: cpp
 matrix:
   include:
-    - osx: linux
+    - os: linux
       dist: xenial
-      compiler:
-        - clang
-        - gcc
+      compiler: clang
+    - os: linux
+      dist: xenial
+      compiler: gcc
     - os: osx
 
 before_install:
