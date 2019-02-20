@@ -1,6 +1,3 @@
-compiler:
-  - clang
-  - gcc
 
 matrix:
   include:
@@ -8,10 +5,15 @@ matrix:
       dist: xenial
     - os: osx
 
+compiler:
+  - clang
+  - gcc
+
+before_install:
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo add-apt-repository ppa:timsc/opencv-3.4 -y && apt-get update -q; fi
+
 addons:
   apt:
-    sources:
-      - ppa:timsc/opencv-3.4
     packages:
       - libboost-all-dev
       - libopencv-dev
