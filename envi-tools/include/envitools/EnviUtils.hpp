@@ -28,7 +28,7 @@ static cv::Mat ToneMap(const cv::Mat& m, float gamma = 1.0f)
 
     // Tone map requires 3-channel images
     if (m.channels() == 1) {
-        cv::cvtColor(tmp, tmp, CV_GRAY2BGR);
+        cv::cvtColor(tmp, tmp, cv::COLOR_GRAY2BGR);
     }
 
     // Tonemap
@@ -37,7 +37,7 @@ static cv::Mat ToneMap(const cv::Mat& m, float gamma = 1.0f)
 
     // Convert back to gray if it was gray
     if (m.channels() == 1) {
-        cv::cvtColor(tmp, tmp, CV_BGR2GRAY);
+        cv::cvtColor(tmp, tmp, cv::COLOR_BGR2GRAY);
     }
 
     return tmp;

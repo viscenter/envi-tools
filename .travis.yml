@@ -10,7 +10,7 @@ matrix:
     - os: osx
 
 before_install:
-  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo add-apt-repository ppa:timsc/opencv-3.4 -y && sudo apt-get update -q && sudo apt-get install libopencv-dev -y; fi
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo ./scripts/InstallOpenCV.sh; fi
 
 addons:
   apt:
