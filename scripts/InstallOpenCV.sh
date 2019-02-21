@@ -6,5 +6,6 @@ cd opencv*/
 mkdir -p build/
 cd build/
 cmake ..
-make install -j 2
+make -j 2
+sudo make install
 rm -rf opencv*
