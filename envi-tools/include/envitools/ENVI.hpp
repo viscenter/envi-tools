@@ -1,6 +1,8 @@
 #pragma once
 
 #include <array>
+#include <exception>
+#include <fstream>
 #include <iostream>
 #include <string>
 
