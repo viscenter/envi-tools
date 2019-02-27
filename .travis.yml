@@ -1,28 +1,42 @@
 language: cpp
 matrix:
   include:
+    # Linux clang
     - os: linux
       dist: xenial
       compiler: clang
+      addons:
+        apt:
+          packages:
+            - libboost-all-dev
+
+    # Linux gcc 6
     - os: linux
       dist: xenial
-      compiler: gcc
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - g++-6
+            - libboost-all-dev
+      env:
+        - MATRIX_EVAL="export CC=gcc-6 && export CXX=g++-6"
+
+    # macOS
     - os: osx
+      addons:
+        homebrew:
+          packages:
+            - boost
+            - cmake
+            - opencv
 
 before_install:
+  - eval "${MATRIX_EVAL}"
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then ./scripts/InstallOpenCV.sh; fi
-
-addons:
-  apt:
-    packages:
-      - libboost-all-dev
-  homebrew:
-    packages:
-      - boost
-      - cmake
-      - opencv
 
 script:
   - mkdir -p build/
   - cd build/
-  - cmake .. && make -j
+  - cmake .. && make -j 2
