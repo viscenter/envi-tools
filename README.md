@@ -1,3 +1,5 @@
+# NOTICE: Development on this project has moved to a new project on [GitLab.com](https://gitlab.com/educelab/envi-tools). This repository has been archived and will no longer be updated.
+
 # envi-tools
 
 ## Requirements
